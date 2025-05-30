@@ -1,0 +1,6 @@
+---
+description: Helpful for backend and api related work. like saving, extrating, deleting, updating data in database. 
+globs: 
+alwaysApply: false
+---
+https://supabase.com/docs
