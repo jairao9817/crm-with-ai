@@ -1,11 +1,13 @@
 # Phase 1: Lead & Deal Management MVP - Product Requirements Document
 
 ## Overview
+
 This document outlines the requirements and specifications for Phase 1 of the AI-powered CRM system, focusing on core lead and deal management functionality.
 
 ## Scope
 
 ### In Scope
+
 - User authentication and authorization
 - Contact/lead management
 - Basic deal pipeline
@@ -14,6 +16,7 @@ This document outlines the requirements and specifications for Phase 1 of the AI
 - Data persistence layer
 
 ### Out of Scope
+
 - Advanced AI features (Phase 2)
 - Complex analytics
 - Integration with external systems
@@ -21,6 +24,7 @@ This document outlines the requirements and specifications for Phase 1 of the AI
 - Bulk operations
 
 ## Assumptions & Dependencies
+
 - Users have modern web browsers (Chrome, Firefox, Safari, Edge)
 - Internet connectivity required
 - OpenAI API availability (for future phases)
@@ -29,12 +33,14 @@ This document outlines the requirements and specifications for Phase 1 of the AI
 ## User Personas
 
 ### Sales Representative
+
 - Primary user of the system
 - Manages leads and deals daily
 - Needs quick access to contact information
 - Tracks activities and follow-ups
 
 ### Sales Manager
+
 - Oversees team performance
 - Reviews deal pipeline
 - Needs access to team metrics
@@ -43,9 +49,10 @@ This document outlines the requirements and specifications for Phase 1 of the AI
 ## Functional Requirements
 
 ### Authentication & Authorization
+
 1. User Registration
+
    - Email/password registration
-   - Google OAuth integration
    - Email verification flow
    - Password reset functionality
 
@@ -56,7 +63,9 @@ This document outlines the requirements and specifications for Phase 1 of the AI
    - Role permission matrix
 
 ### Contact Management
+
 1. Contact Creation
+
    - Required fields:
      - First name
      - Last name
@@ -74,7 +83,9 @@ This document outlines the requirements and specifications for Phase 1 of the AI
    - Search functionality
 
 ### Deal Pipeline
+
 1. Deal Creation
+
    - Required fields:
      - Title
      - Value
@@ -91,7 +102,9 @@ This document outlines the requirements and specifications for Phase 1 of the AI
    - Deal cards with key info
 
 ### Activity Tracking
+
 1. Activity Types
+
    - Calls
    - Emails
    - Meetings
@@ -106,7 +119,9 @@ This document outlines the requirements and specifications for Phase 1 of the AI
 ## Technical Requirements
 
 ### Frontend Architecture
+
 1. Project Structure
+
 ```typescript
 /src
   /components
@@ -114,7 +129,7 @@ This document outlines the requirements and specifications for Phase 1 of the AI
     /contacts    // Contact-related components
     /deals       // Deal-related components
     /activities  // Activity components
-    /common      // Shared UI components
+    /ui      // Shared UI components
   /hooks         // Custom React hooks
   /services     // API services
   /types        // TypeScript definitions
@@ -128,7 +143,9 @@ This document outlines the requirements and specifications for Phase 1 of the AI
    - Responsive design implementation
 
 ### Data Layer
+
 1. Database Schema
+
 ```sql
 -- Contacts Table
 CREATE TABLE contacts (
@@ -167,7 +184,6 @@ CREATE TABLE activities (
 ```
 
 2. API Integration
-   - React Query setup
    - Typed API responses
    - Error handling
    - Loading states
@@ -175,16 +191,14 @@ CREATE TABLE activities (
 ## User Interface
 
 ### Design System
-1. Colors
-   - Primary: #2563eb (blue-600)
-   - Secondary: #475569 (slate-600)
-   - Success: #16a34a (green-600)
-   - Warning: #ca8a04 (yellow-600)
-   - Danger: #dc2626 (red-600)
 
+1. Colors
+   - already specified in app.css and tailwind config
+   
 2. Typography
+
    - Font: Inter
-   - Headings: 
+   - Headings:
      - H1: 2.25rem/2.5rem
      - H2: 1.875rem/2.25rem
      - H3: 1.5rem/2rem
@@ -198,18 +212,21 @@ CREATE TABLE activities (
 ### Key Screens
 
 1. Dashboard
+
    - Quick stats
    - Recent activities
    - Deal pipeline summary
    - Contact shortcuts
 
 2. Contact List
+
    - Filterable table
    - Quick actions
    - Search functionality
    - Pagination
 
 3. Deal Board
+
    - Kanban layout
    - Stage columns
    - Deal cards
@@ -222,6 +239,7 @@ CREATE TABLE activities (
    - Activity details
 
 ## Performance Requirements
+
 - Page load time < 2 seconds
 - API response time < 500ms
 - Support for 10,000+ contacts
@@ -229,6 +247,7 @@ CREATE TABLE activities (
 - Concurrent users: 100+
 
 ## Security Requirements
+
 - Data encryption at rest
 - Secure API endpoints
 - Input sanitization
@@ -237,12 +256,15 @@ CREATE TABLE activities (
 - Rate limiting
 
 ## Testing Requirements
+
 1. Unit Tests
+
    - Component testing
    - Utility function testing
    - Hook testing
 
 2. Integration Tests
+
    - User flows
    - API integration
    - State management
@@ -252,12 +274,15 @@ CREATE TABLE activities (
    - Cross-browser testing
 
 ## Success Metrics
+
 1. User Engagement
+
    - Daily active users
    - Session duration
    - Feature usage
 
 2. Performance
+
    - Load time
    - Error rates
    - API response time
@@ -270,18 +295,21 @@ CREATE TABLE activities (
 ## Development Phases
 
 ### Week 1-2: Foundation
+
 - Project setup
 - Authentication implementation
 - Database schema setup
 - Basic UI components
 
 ### Week 3-4: Core Features
+
 - Contact management
 - Deal pipeline
 - Activity tracking
 - Basic dashboard
 
 ### Week 5-6: Polish & Testing
+
 - UI/UX refinement
 - Performance optimization
 - Testing implementation
@@ -289,14 +317,15 @@ CREATE TABLE activities (
 
 ## Risks & Mitigation
 
-| Risk | Impact | Mitigation |
-|------|---------|------------|
-| Data loss | High | Regular backups, validation |
-| Performance issues | Medium | Optimization, monitoring |
-| User adoption | High | Training, documentation |
-| Security breach | High | Security audit, testing |
+| Risk               | Impact | Mitigation                  |
+| ------------------ | ------ | --------------------------- |
+| Data loss          | High   | Regular backups, validation |
+| Performance issues | Medium | Optimization, monitoring    |
+| User adoption      | High   | Training, documentation     |
+| Security breach    | High   | Security audit, testing     |
 
 ## Future Considerations
+
 - AI feature integration
 - Mobile app development
 - External integrations
@@ -334,6 +363,7 @@ DELETE /api/activities/:id
 ### User Flow Diagrams
 
 1. Contact Creation Flow
+
 ```mermaid
 graph TD
     A[Start] --> B[Click New Contact]
@@ -346,6 +376,7 @@ graph TD
 ```
 
 2. Deal Pipeline Flow
+
 ```mermaid
 graph TD
     A[Start] --> B[View Pipeline]
@@ -356,3 +387,4 @@ graph TD
     E -->|Error| G[Show Error]
     F --> H[End]
     G --> B
+```
