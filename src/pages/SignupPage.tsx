@@ -9,6 +9,7 @@ import {
 import AuthLayout from "../components/AuthLayout";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
+import { useAuth } from "../context/AuthContext";
 
 const SignupPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -19,7 +20,9 @@ const SignupPage: React.FC = () => {
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
+  const { signUp } = useAuth();
   const navigate = useNavigate();
 
   const validateForm = () => {
@@ -60,15 +63,18 @@ const SignupPage: React.FC = () => {
     setErrors({});
 
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // For now, just show success message and redirect to login
-      alert(
-        "Account created successfully! Please sign in with your credentials."
+      const { error } = await signUp(
+        formData.email,
+        formData.password,
+        formData.name
       );
-      navigate("/login");
-    } catch {
+
+      if (error) {
+        setErrors({ general: error.message });
+      } else {
+        setIsSubmitted(true);
+      }
+    } catch (err) {
       setErrors({ general: "An error occurred. Please try again." });
     } finally {
       setIsSubmitting(false);
@@ -82,6 +88,39 @@ const SignupPage: React.FC = () => {
       [name]: value,
     }));
   };
+
+  if (isSubmitted) {
+    return (
+      <AuthLayout
+        title="Check your email"
+        subtitle="We've sent you a confirmation link"
+      >
+        <div className="space-y-6">
+          <div className="text-center">
+            <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-success-100 mb-6">
+              <CheckCircleIcon className="h-8 w-8 text-success-600" />
+            </div>
+            <p className="text-sm text-text-secondary mb-6">
+              We've sent a confirmation email to{" "}
+              <strong className="text-text-primary">{formData.email}</strong>.
+              Please check your inbox and click the confirmation link to
+              activate your account.
+            </p>
+            <p className="text-xs text-text-tertiary mb-6">
+              Didn't receive the email? Check your spam folder or try signing up
+              again.
+            </p>
+          </div>
+
+          <Link to="/login">
+            <Button variant="primary" className="w-full" size="lg">
+              Back to sign in
+            </Button>
+          </Link>
+        </div>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout

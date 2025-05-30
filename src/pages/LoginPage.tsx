@@ -16,7 +16,7 @@ const LoginPage: React.FC = () => {
   }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { login } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
 
   const validateForm = () => {
@@ -47,14 +47,14 @@ const LoginPage: React.FC = () => {
     setErrors({});
 
     try {
-      const success = await login(email, password);
+      const { error } = await signIn(email, password);
 
-      if (success) {
-        navigate("/home");
+      if (error) {
+        setErrors({ general: error.message });
       } else {
-        setErrors({ general: "Invalid email or password" });
+        navigate("/home");
       }
-    } catch {
+    } catch (err) {
       setErrors({ general: "An error occurred. Please try again." });
     } finally {
       setIsSubmitting(false);
@@ -64,7 +64,7 @@ const LoginPage: React.FC = () => {
   return (
     <AuthLayout
       title="Sign in to your account"
-      subtitle="Use admin@example.com / password123 for demo"
+      subtitle="Welcome back! Please sign in to continue"
     >
       <form className="space-y-6" onSubmit={handleSubmit}>
         <div className="space-y-4">

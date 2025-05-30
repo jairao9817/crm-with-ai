@@ -11,10 +11,10 @@ import {
 } from "@heroicons/react/24/outline";
 
 const HomePage: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
   };
 
   const stats = [
@@ -58,7 +58,7 @@ const HomePage: React.FC = () => {
             <div className="flex items-center space-x-6">
               <ThemeToggle showLabel={false} />
               <span className="text-sm text-text-secondary">
-                Welcome, {user?.name}!
+                Welcome, {user?.user_metadata?.name || user?.email}!
               </span>
               <Button variant="outline" onClick={handleLogout} size="sm">
                 Logout
@@ -145,7 +145,7 @@ const HomePage: React.FC = () => {
                       <span className="font-medium text-text-primary">
                         Name:
                       </span>{" "}
-                      {user?.name}
+                      {user?.user_metadata?.name || "Not provided"}
                     </p>
                     <p className="text-sm text-text-secondary">
                       <span className="font-medium text-text-primary">

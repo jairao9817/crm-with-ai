@@ -4,12 +4,15 @@ import { EnvelopeIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import AuthLayout from "../components/AuthLayout";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
+import { useAuth } from "../context/AuthContext";
 
 const ForgotPasswordPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const { resetPassword } = useAuth();
 
   const validateForm = () => {
     if (!email) {
@@ -33,12 +36,14 @@ const ForgotPasswordPage: React.FC = () => {
     setError("");
 
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const { error } = await resetPassword(email);
 
-      // For now, just show success message
-      setIsSubmitted(true);
-    } catch {
+      if (error) {
+        setError(error.message);
+      } else {
+        setIsSubmitted(true);
+      }
+    } catch (err) {
       setError("An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);

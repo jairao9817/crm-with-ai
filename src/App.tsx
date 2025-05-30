@@ -12,6 +12,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import HomePage from "./pages/HomePage";
 import "./App.css";
 
@@ -34,6 +35,10 @@ const AppRouter: React.FC = () => {
         element={
           user ? <Navigate to="/home" replace /> : <ForgotPasswordPage />
         }
+      />
+      <Route
+        path="/reset-password"
+        element={user ? <Navigate to="/home" replace /> : <ResetPasswordPage />}
       />
 
       {/* Protected routes */}
