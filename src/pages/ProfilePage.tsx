@@ -101,235 +101,250 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-surface border-b border-border shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-text-primary">
-                Profile Settings
-              </h1>
-            </div>
+    <div className="p-6">
+      {/* Page Header */}
+      <div className="mb-8">
+        <div className="flex items-center space-x-4">
+          <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center">
+            <span className="text-white text-xl font-bold">
+              {user?.user_metadata?.name?.[0] || user?.email?.[0] || "U"}
+            </span>
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-text-primary">Profile</h1>
+            <p className="text-text-secondary mt-1">
+              Manage your account information and security settings.
+            </p>
           </div>
         </div>
-      </header>
+      </div>
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-8">
-          {/* Profile Information Section */}
-          <div className="bg-surface border border-border rounded-lg p-6">
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-text-primary mb-2">
-                Profile Information
-              </h2>
-              <p className="text-sm text-text-secondary">
-                Update your account's profile information and email address.
-              </p>
-            </div>
-
-            {profileUpdateSuccess && (
-              <div className="mb-6 bg-success-50 border border-success-200 rounded-md p-3">
-                <div className="flex items-center">
-                  <CheckCircleIcon className="h-5 w-5 text-success-600 mr-2" />
-                  <p className="text-success-600 text-sm">
-                    Profile updated successfully!
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <form
-              className="space-y-6"
-              onSubmit={handleProfileSubmit(onProfileSubmit)}
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Input
-                  id="name"
-                  type="text"
-                  label="Full Name"
-                  error={profileErrors.name?.message}
-                  leftIcon={<UserIcon className="h-5 w-5" />}
-                  {...registerProfile("name", {
-                    required: "Name is required",
-                    minLength: {
-                      value: 2,
-                      message: "Name must be at least 2 characters",
-                    },
-                  })}
-                />
-                <Input
-                  id="email"
-                  type="email"
-                  label="Email Address"
-                  error={profileErrors.email?.message}
-                  leftIcon={<EnvelopeIcon className="h-5 w-5" />}
-                  disabled
-                  hint="Email cannot be changed"
-                  {...registerProfile("email")}
-                />
-              </div>
-
-              {profileErrors.root && (
-                <div className="bg-error-50 border border-error-200 rounded-md p-3">
-                  <p className="text-error-600 text-sm">
-                    {profileErrors.root.message}
-                  </p>
-                </div>
-              )}
-
-              <div className="flex justify-end">
-                <Button
-                  type="submit"
-                  loading={isUpdatingProfile}
-                  className="px-6"
-                >
-                  Update Profile
-                </Button>
-              </div>
-            </form>
+      <div className="space-y-8">
+        {/* Profile Information Section */}
+        <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-text-primary mb-2 flex items-center">
+              <UserIcon className="h-5 w-5 mr-2" />
+              Profile Information
+            </h2>
+            <p className="text-sm text-text-secondary">
+              Update your account's profile information and email address.
+            </p>
           </div>
 
-          {/* Password Section */}
-          <div className="bg-surface border border-border rounded-lg p-6">
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-text-primary mb-2">
-                Change Password
-              </h2>
-              <p className="text-sm text-text-secondary">
-                Ensure your account is using a long, random password to stay
-                secure.
-              </p>
+          {profileUpdateSuccess && (
+            <div className="mb-6 bg-success-50 border border-success-200 rounded-md p-3">
+              <div className="flex items-center">
+                <CheckCircleIcon className="h-5 w-5 text-success-600 mr-2" />
+                <p className="text-success-600 text-sm">
+                  Profile updated successfully!
+                </p>
+              </div>
             </div>
+          )}
 
-            {passwordUpdateSuccess && (
-              <div className="mb-6 bg-success-50 border border-success-200 rounded-md p-3">
-                <div className="flex items-center">
-                  <CheckCircleIcon className="h-5 w-5 text-success-600 mr-2" />
-                  <p className="text-success-600 text-sm">
-                    Password updated successfully!
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <form
-              className="space-y-6"
-              onSubmit={handlePasswordSubmit(onPasswordSubmit)}
-            >
-              <div className="space-y-4">
-                <Input
-                  id="currentPassword"
-                  type="password"
-                  label="Current Password"
-                  error={passwordErrors.currentPassword?.message}
-                  leftIcon={<LockClosedIcon className="h-5 w-5" />}
-                  {...registerPassword("currentPassword", {
-                    required: "Current password is required",
-                  })}
-                />
-                <Input
-                  id="newPassword"
-                  type="password"
-                  label="New Password"
-                  error={passwordErrors.newPassword?.message}
-                  leftIcon={<LockClosedIcon className="h-5 w-5" />}
-                  hint="Must be at least 6 characters"
-                  {...registerPassword("newPassword", {
-                    required: "New password is required",
-                    minLength: {
-                      value: 6,
-                      message: "Password must be at least 6 characters",
-                    },
-                  })}
-                />
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  label="Confirm New Password"
-                  error={passwordErrors.confirmPassword?.message}
-                  leftIcon={<CheckCircleIcon className="h-5 w-5" />}
-                  {...registerPassword("confirmPassword", {
-                    required: "Please confirm your new password",
-                    validate: (value) =>
-                      value === newPassword || "Passwords do not match",
-                  })}
-                />
-              </div>
-
-              {passwordErrors.root && (
-                <div className="bg-error-50 border border-error-200 rounded-md p-3">
-                  <p className="text-error-600 text-sm">
-                    {passwordErrors.root.message}
-                  </p>
-                </div>
-              )}
-
-              <div className="flex justify-end">
-                <Button
-                  type="submit"
-                  loading={isSubmittingPassword}
-                  className="px-6"
-                >
-                  Update Password
-                </Button>
-              </div>
-            </form>
-          </div>
-
-          {/* Account Information Section */}
-          <div className="bg-surface border border-border rounded-lg p-6">
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-text-primary mb-2">
-                Account Information
-              </h2>
-              <p className="text-sm text-text-secondary">
-                View your account details and registration information.
-              </p>
-            </div>
-
+          <form
+            className="space-y-6"
+            onSubmit={handleProfileSubmit(onProfileSubmit)}
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">
-                  User ID
-                </label>
-                <p className="text-sm text-text-secondary bg-background-secondary p-3 rounded-md border border-border font-mono">
-                  {user?.id}
+              <Input
+                id="name"
+                type="text"
+                label="Full Name"
+                error={profileErrors.name?.message}
+                leftIcon={<UserIcon className="h-5 w-5" />}
+                {...registerProfile("name", {
+                  required: "Name is required",
+                  minLength: {
+                    value: 2,
+                    message: "Name must be at least 2 characters",
+                  },
+                })}
+              />
+              <Input
+                id="email"
+                type="email"
+                label="Email Address"
+                error={profileErrors.email?.message}
+                leftIcon={<EnvelopeIcon className="h-5 w-5" />}
+                disabled
+                hint="Email cannot be changed"
+                {...registerProfile("email")}
+              />
+            </div>
+
+            {profileErrors.root && (
+              <div className="bg-error-50 border border-error-200 rounded-md p-3">
+                <p className="text-error-600 text-sm">
+                  {profileErrors.root.message}
                 </p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">
-                  Account Created
-                </label>
-                <p className="text-sm text-text-secondary bg-background-secondary p-3 rounded-md border border-border">
-                  {user?.created_at
-                    ? new Date(user.created_at).toLocaleDateString()
-                    : "N/A"}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">
-                  Email Verified
-                </label>
-                <p className="text-sm text-text-secondary bg-background-secondary p-3 rounded-md border border-border">
-                  {user?.email_confirmed_at ? "Yes" : "No"}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">
-                  Last Sign In
-                </label>
-                <p className="text-sm text-text-secondary bg-background-secondary p-3 rounded-md border border-border">
-                  {user?.last_sign_in_at
-                    ? new Date(user.last_sign_in_at).toLocaleDateString()
-                    : "N/A"}
+            )}
+
+            <div className="flex justify-end">
+              <Button
+                type="submit"
+                loading={isUpdatingProfile}
+                className="px-6"
+              >
+                Update Profile
+              </Button>
+            </div>
+          </form>
+        </div>
+
+        {/* Password Section */}
+        <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-text-primary mb-2 flex items-center">
+              <LockClosedIcon className="h-5 w-5 mr-2" />
+              Change Password
+            </h2>
+            <p className="text-sm text-text-secondary">
+              Update your password to keep your account secure.
+            </p>
+          </div>
+
+          {passwordUpdateSuccess && (
+            <div className="mb-6 bg-success-50 border border-success-200 rounded-md p-3">
+              <div className="flex items-center">
+                <CheckCircleIcon className="h-5 w-5 text-success-600 mr-2" />
+                <p className="text-success-600 text-sm">
+                  Password updated successfully!
                 </p>
               </div>
             </div>
+          )}
+
+          <form
+            className="space-y-6"
+            onSubmit={handlePasswordSubmit(onPasswordSubmit)}
+          >
+            <div className="space-y-4">
+              <Input
+                id="currentPassword"
+                type="password"
+                label="Current Password"
+                error={passwordErrors.currentPassword?.message}
+                leftIcon={<LockClosedIcon className="h-5 w-5" />}
+                {...registerPassword("currentPassword", {
+                  required: "Current password is required",
+                })}
+              />
+
+              <Input
+                id="newPassword"
+                type="password"
+                label="New Password"
+                error={passwordErrors.newPassword?.message}
+                leftIcon={<LockClosedIcon className="h-5 w-5" />}
+                {...registerPassword("newPassword", {
+                  required: "New password is required",
+                  minLength: {
+                    value: 8,
+                    message: "Password must be at least 8 characters",
+                  },
+                  pattern: {
+                    value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+                    message:
+                      "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+                  },
+                })}
+              />
+
+              <Input
+                id="confirmPassword"
+                type="password"
+                label="Confirm New Password"
+                error={passwordErrors.confirmPassword?.message}
+                leftIcon={<LockClosedIcon className="h-5 w-5" />}
+                {...registerPassword("confirmPassword", {
+                  required: "Please confirm your new password",
+                  validate: (value) =>
+                    value === newPassword || "Passwords do not match",
+                })}
+              />
+            </div>
+
+            {passwordErrors.root && (
+              <div className="bg-error-50 border border-error-200 rounded-md p-3">
+                <p className="text-error-600 text-sm">
+                  {passwordErrors.root.message}
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end">
+              <Button
+                type="submit"
+                loading={isSubmittingPassword}
+                className="px-6"
+              >
+                Update Password
+              </Button>
+            </div>
+          </form>
+        </div>
+
+        {/* Account Information */}
+        <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-text-primary mb-2">
+              Account Information
+            </h2>
+            <p className="text-sm text-text-secondary">
+              View your account details and status.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-1">
+                Account Created
+              </label>
+              <p className="text-sm text-text-secondary">
+                {user?.created_at
+                  ? new Date(user.created_at).toLocaleDateString()
+                  : "Unknown"}
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-1">
+                Last Sign In
+              </label>
+              <p className="text-sm text-text-secondary">
+                {user?.last_sign_in_at
+                  ? new Date(user.last_sign_in_at).toLocaleDateString()
+                  : "Unknown"}
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-1">
+                Email Verified
+              </label>
+              <p className="text-sm text-text-secondary">
+                {user?.email_confirmed_at ? (
+                  <span className="text-success-600">✓ Verified</span>
+                ) : (
+                  <span className="text-warning-600">⚠ Not verified</span>
+                )}
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-1">
+                User ID
+              </label>
+              <p className="text-sm text-text-secondary font-mono">
+                {user?.id || "Unknown"}
+              </p>
+            </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };

@@ -1,15 +1,9 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { ThemeToggle } from "./ThemeToggle";
 import {
   HomeIcon,
   UsersIcon,
   BriefcaseIcon,
-  UserIcon,
-  Cog6ToothIcon,
-  ArrowRightOnRectangleIcon,
-  Bars3Icon,
   XMarkIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -18,8 +12,6 @@ import {
   HomeIcon as HomeIconSolid,
   UsersIcon as UsersIconSolid,
   BriefcaseIcon as BriefcaseIconSolid,
-  UserIcon as UserIconSolid,
-  Cog6ToothIcon as Cog6ToothIconSolid,
 } from "@heroicons/react/24/solid";
 
 interface NavigationItem {
@@ -48,18 +40,6 @@ const navigation: NavigationItem[] = [
     icon: BriefcaseIcon,
     iconSolid: BriefcaseIconSolid,
   },
-  {
-    name: "Profile",
-    href: "/profile",
-    icon: UserIcon,
-    iconSolid: UserIconSolid,
-  },
-  {
-    name: "Settings",
-    href: "/settings",
-    icon: Cog6ToothIcon,
-    iconSolid: Cog6ToothIconSolid,
-  },
 ];
 
 interface SidebarProps {
@@ -75,12 +55,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   isMobileOpen,
   setIsMobileOpen,
 }) => {
-  const { user, signOut } = useAuth();
   const location = useLocation();
-
-  const handleLogout = async () => {
-    await signOut();
-  };
 
   const isActive = (href: string) => {
     return location.pathname === href;
@@ -89,20 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const sidebarContent = (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border">
-        <div
-          className={`flex items-center ${isCollapsed ? "justify-center" : ""}`}
-        >
-          {!isCollapsed && (
-            <h1 className="text-xl font-bold text-text-primary">CRM AI</h1>
-          )}
-          {isCollapsed && (
-            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">C</span>
-            </div>
-          )}
-        </div>
-
+      <div className="flex items-center justify-end p-4 border-b border-border">
         {/* Desktop collapse toggle */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
@@ -125,7 +87,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-2">
+      <nav className="flex-1 px-3 py-4 space-y-1">
         {navigation.map((item) => {
           const active = isActive(item.href);
           const IconComponent = active ? item.iconSolid : item.icon;
@@ -152,49 +114,6 @@ const Sidebar: React.FC<SidebarProps> = ({
           );
         })}
       </nav>
-
-      {/* User section */}
-      <div className="border-t border-border p-4">
-        {/* Theme Toggle */}
-        <div className={`mb-4 ${isCollapsed ? "flex justify-center" : ""}`}>
-          <ThemeToggle showLabel={!isCollapsed} />
-        </div>
-
-        {/* User Info */}
-        {!isCollapsed && (
-          <div className="mb-4 p-3 bg-background-secondary rounded-lg">
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">
-                  {user?.user_metadata?.name?.[0] || user?.email?.[0] || "U"}
-                </span>
-              </div>
-              <div className="ml-3 flex-1 min-w-0">
-                <p className="text-sm font-medium text-text-primary truncate">
-                  {user?.user_metadata?.name || "User"}
-                </p>
-                <p className="text-xs text-text-secondary truncate">
-                  {user?.email}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Logout Button */}
-        <button
-          onClick={handleLogout}
-          className={`
-            w-full flex items-center px-3 py-2 text-sm font-medium text-error-600 
-            hover:text-error-700 hover:bg-error-50 rounded-lg transition-colors
-            ${isCollapsed ? "justify-center" : ""}
-          `}
-          title={isCollapsed ? "Logout" : undefined}
-        >
-          <ArrowRightOnRectangleIcon className="h-5 w-5 flex-shrink-0" />
-          {!isCollapsed && <span className="ml-3">Logout</span>}
-        </button>
-      </div>
     </div>
   );
 
@@ -211,7 +130,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Desktop Sidebar */}
       <div
         className={`
-          hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:z-50
+          hidden lg:flex lg:flex-col lg:fixed lg:top-16 lg:bottom-0 lg:z-30
           bg-surface border-r border-border shadow-sm
           transition-all duration-300 ease-in-out
           ${isCollapsed ? "lg:w-16" : "lg:w-64"}
@@ -223,7 +142,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Mobile Sidebar */}
       <div
         className={`
-          fixed inset-y-0 left-0 z-50 w-64 bg-surface border-r border-border shadow-lg
+          fixed top-16 bottom-0 left-0 z-50 w-64 bg-surface border-r border-border shadow-lg
           transform transition-transform duration-300 ease-in-out lg:hidden
           ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
         `}

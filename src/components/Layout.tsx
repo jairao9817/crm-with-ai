@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Sidebar from "./Sidebar";
-import { Bars3Icon } from "@heroicons/react/24/outline";
+import { TopNavbar } from "./TopNavbar";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,35 +12,30 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar
-        isCollapsed={sidebarCollapsed}
-        setIsCollapsed={setSidebarCollapsed}
-        isMobileOpen={mobileMenuOpen}
-        setIsMobileOpen={setMobileMenuOpen}
+      {/* Top Navbar */}
+      <TopNavbar
+        onMobileMenuToggle={() => setMobileMenuOpen(true)}
+        showMobileMenuButton={true}
       />
 
-      {/* Mobile header */}
-      <div className="lg:hidden bg-surface border-b border-border shadow-sm">
-        <div className="flex items-center justify-between px-4 py-3">
-          <button
-            onClick={() => setMobileMenuOpen(true)}
-            className="p-2 rounded-md text-text-secondary hover:text-text-primary hover:bg-background-secondary transition-colors"
-          >
-            <Bars3Icon className="h-6 w-6" />
-          </button>
-          <h1 className="text-lg font-semibold text-text-primary">CRM AI</h1>
-          <div className="w-10" /> {/* Spacer for centering */}
-        </div>
-      </div>
+      <div className="flex">
+        {/* Sidebar */}
+        <Sidebar
+          isCollapsed={sidebarCollapsed}
+          setIsCollapsed={setSidebarCollapsed}
+          isMobileOpen={mobileMenuOpen}
+          setIsMobileOpen={setMobileMenuOpen}
+        />
 
-      {/* Main content */}
-      <div
-        className={`
-          transition-all duration-300 ease-in-out
-          lg:pl-64 ${sidebarCollapsed ? "lg:pl-16" : "lg:pl-64"}
-        `}
-      >
-        <main className="min-h-screen">{children}</main>
+        {/* Main content */}
+        <div
+          className={`
+            flex-1 transition-all duration-300 ease-in-out
+            lg:ml-64 ${sidebarCollapsed ? "lg:ml-16" : "lg:ml-64"}
+          `}
+        >
+          <main className="min-h-[calc(100vh-4rem)]">{children}</main>
+        </div>
       </div>
     </div>
   );
