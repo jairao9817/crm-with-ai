@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React from "react";
+import { Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
 import {
   UserIcon,
   EnvelopeIcon,
@@ -11,82 +12,41 @@ import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { useAuth } from "../context/AuthContext";
 
+interface SignupFormData {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
 const SignupPage: React.FC = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+    watch,
+  } = useForm<SignupFormData>();
+
+  const [isSubmitted, setIsSubmitted] = React.useState(false);
+  const [submittedEmail, setSubmittedEmail] = React.useState("");
 
   const { signUp } = useAuth();
-  const navigate = useNavigate();
+  const password = watch("password");
 
-  const validateForm = () => {
-    const newErrors: { [key: string]: string } = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
-    }
-
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) return;
-
-    setIsSubmitting(true);
-    setErrors({});
-
+  const onSubmit = async (data: SignupFormData) => {
     try {
-      const { error } = await signUp(
-        formData.email,
-        formData.password,
-        formData.name
-      );
+      const { error } = await signUp(data.email, data.password, data.name);
 
       if (error) {
-        setErrors({ general: error.message });
+        setError("root", { message: error.message });
       } else {
+        setSubmittedEmail(data.email);
         setIsSubmitted(true);
       }
     } catch (err) {
-      setErrors({ general: "An error occurred. Please try again." });
-    } finally {
-      setIsSubmitting(false);
+      setError("root", { message: "An error occurred. Please try again." });
     }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
   };
 
   if (isSubmitted) {
@@ -102,7 +62,7 @@ const SignupPage: React.FC = () => {
             </div>
             <p className="text-sm text-text-secondary mb-6">
               We've sent a confirmation email to{" "}
-              <strong className="text-text-primary">{formData.email}</strong>.
+              <strong className="text-text-primary">{submittedEmail}</strong>.
               Please check your inbox and click the confirmation link to
               activate your account.
             </p>
@@ -127,63 +87,73 @@ const SignupPage: React.FC = () => {
       title="Create your account"
       subtitle="Join us today and get started"
     >
-      <form className="space-y-6" onSubmit={handleSubmit}>
+      <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-4">
           <Input
             id="name"
-            name="name"
             type="text"
             autoComplete="name"
-            required
             label="Full name"
-            value={formData.name}
-            onChange={handleInputChange}
-            error={errors.name}
+            error={errors.name?.message}
             leftIcon={<UserIcon className="h-5 w-5" />}
+            {...register("name", {
+              required: "Name is required",
+              minLength: {
+                value: 2,
+                message: "Name must be at least 2 characters",
+              },
+            })}
           />
           <Input
             id="email"
-            name="email"
             type="email"
             autoComplete="email"
-            required
             label="Email address"
-            value={formData.email}
-            onChange={handleInputChange}
-            error={errors.email}
+            error={errors.email?.message}
             leftIcon={<EnvelopeIcon className="h-5 w-5" />}
+            {...register("email", {
+              required: "Email is required",
+              pattern: {
+                value: /\S+@\S+\.\S+/,
+                message: "Email is invalid",
+              },
+            })}
           />
           <Input
             id="password"
-            name="password"
             type="password"
             autoComplete="new-password"
-            required
             label="Password"
-            value={formData.password}
-            onChange={handleInputChange}
-            error={errors.password}
+            error={errors.password?.message}
             leftIcon={<LockClosedIcon className="h-5 w-5" />}
             hint="Must be at least 6 characters"
+            {...register("password", {
+              required: "Password is required",
+              minLength: {
+                value: 6,
+                message: "Password must be at least 6 characters",
+              },
+            })}
           />
           <Input
             id="confirmPassword"
-            name="confirmPassword"
             type="password"
             autoComplete="new-password"
-            required
             label="Confirm password"
-            value={formData.confirmPassword}
-            onChange={handleInputChange}
-            error={errors.confirmPassword}
+            error={errors.confirmPassword?.message}
             leftIcon={<CheckCircleIcon className="h-5 w-5" />}
+            {...register("confirmPassword", {
+              required: "Please confirm your password",
+              validate: (value) =>
+                value === password || "Passwords do not match",
+            })}
           />
         </div>
 
-        {errors.general && (
+        {errors.root && (
           <div className="bg-error-50 border border-error-200 rounded-md p-3">
             <p className="text-error-600 text-sm text-center">
-              {errors.general}
+              {errors.root.message}
             </p>
           </div>
         )}

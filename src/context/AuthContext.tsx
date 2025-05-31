@@ -71,7 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         },
       },
     });
-
+    console.log("Sign up data:", data, error);
     setIsLoading(false);
     return { error };
   };

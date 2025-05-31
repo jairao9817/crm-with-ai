@@ -1,25 +1,32 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useForm } from "react-hook-form";
 import { LockClosedIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import AuthLayout from "../components/AuthLayout";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { useAuth } from "../context/AuthContext";
 
+interface ResetPasswordFormData {
+  password: string;
+  confirmPassword: string;
+}
+
 const ResetPasswordPage: React.FC = () => {
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [errors, setErrors] = useState<{
-    password?: string;
-    confirmPassword?: string;
-    general?: string;
-  }>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+    watch,
+  } = useForm<ResetPasswordFormData>();
+
+  const [isSuccess, setIsSuccess] = React.useState(false);
   const [searchParams] = useSearchParams();
 
   const { updatePassword } = useAuth();
   const navigate = useNavigate();
+  const password = watch("password");
 
   useEffect(() => {
     // Check if we have the access token and refresh token from the URL
@@ -32,48 +39,17 @@ const ResetPasswordPage: React.FC = () => {
     }
   }, [searchParams, navigate]);
 
-  const validateForm = () => {
-    const newErrors: {
-      password?: string;
-      confirmPassword?: string;
-    } = {};
-
-    if (!password) {
-      newErrors.password = "Password is required";
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
-    if (!confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) return;
-
-    setIsSubmitting(true);
-    setErrors({});
-
+  const onSubmit = async (data: ResetPasswordFormData) => {
     try {
-      const { error } = await updatePassword(password);
+      const { error } = await updatePassword(data.password);
 
       if (error) {
-        setErrors({ general: error.message });
+        setError("root", { message: error.message });
       } else {
         setIsSuccess(true);
       }
     } catch (err) {
-      setErrors({ general: "An error occurred. Please try again." });
-    } finally {
-      setIsSubmitting(false);
+      setError("root", { message: "An error occurred. Please try again." });
     }
   };
 
@@ -112,39 +88,43 @@ const ResetPasswordPage: React.FC = () => {
       title="Reset your password"
       subtitle="Enter your new password below"
     >
-      <form className="space-y-6" onSubmit={handleSubmit}>
+      <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-4">
           <Input
             id="password"
-            name="password"
             type="password"
             autoComplete="new-password"
-            required
             label="New password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            error={errors.password}
+            error={errors.password?.message}
             leftIcon={<LockClosedIcon className="h-5 w-5" />}
             hint="Must be at least 6 characters"
+            {...register("password", {
+              required: "Password is required",
+              minLength: {
+                value: 6,
+                message: "Password must be at least 6 characters",
+              },
+            })}
           />
           <Input
             id="confirmPassword"
-            name="confirmPassword"
             type="password"
             autoComplete="new-password"
-            required
             label="Confirm new password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            error={errors.confirmPassword}
+            error={errors.confirmPassword?.message}
             leftIcon={<CheckCircleIcon className="h-5 w-5" />}
+            {...register("confirmPassword", {
+              required: "Please confirm your password",
+              validate: (value) =>
+                value === password || "Passwords do not match",
+            })}
           />
         </div>
 
-        {errors.general && (
+        {errors.root && (
           <div className="bg-error-50 border border-error-200 rounded-md p-3">
             <p className="text-error-600 text-sm text-center">
-              {errors.general}
+              {errors.root.message}
             </p>
           </div>
         )}

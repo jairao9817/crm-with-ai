@@ -1,52 +1,40 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
 import { EnvelopeIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import AuthLayout from "../components/AuthLayout";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { useAuth } from "../context/AuthContext";
 
+interface ForgotPasswordFormData {
+  email: string;
+}
+
 const ForgotPasswordPage: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+    getValues,
+  } = useForm<ForgotPasswordFormData>();
+
+  const [isSubmitted, setIsSubmitted] = React.useState(false);
 
   const { resetPassword } = useAuth();
 
-  const validateForm = () => {
-    if (!email) {
-      setError("Email is required");
-      return false;
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      setError("Email is invalid");
-      return false;
-    }
-
-    setError("");
-    return true;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) return;
-
-    setIsSubmitting(true);
-    setError("");
-
+  const onSubmit = async (data: ForgotPasswordFormData) => {
     try {
-      const { error } = await resetPassword(email);
+      const { error } = await resetPassword(data.email);
 
       if (error) {
-        setError(error.message);
+        setError("root", { message: error.message });
       } else {
         setIsSubmitted(true);
       }
     } catch (err) {
-      setError("An error occurred. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+      setError("root", { message: "An error occurred. Please try again." });
     }
   };
 
@@ -54,7 +42,7 @@ const ForgotPasswordPage: React.FC = () => {
     return (
       <AuthLayout
         title="Check your email"
-        subtitle="We've sent a password reset link to your email address"
+        subtitle="We've sent you a password reset link"
       >
         <div className="space-y-6">
           <div className="text-center">
@@ -62,13 +50,15 @@ const ForgotPasswordPage: React.FC = () => {
               <CheckCircleIcon className="h-8 w-8 text-success-600" />
             </div>
             <p className="text-sm text-text-secondary mb-6">
-              If an account with email{" "}
-              <strong className="text-text-primary">{email}</strong> exists, you
-              will receive a password reset link shortly.
+              We've sent a password reset link to{" "}
+              <strong className="text-text-primary">
+                {getValues("email")}
+              </strong>
+              . Please check your inbox and click the link to reset your
+              password.
             </p>
             <p className="text-xs text-text-tertiary mb-6">
-              Didn't receive the email? Check your spam folder or wait a few
-              minutes and try again.
+              Didn't receive the email? Check your spam folder or try again.
             </p>
           </div>
 
@@ -85,21 +75,32 @@ const ForgotPasswordPage: React.FC = () => {
   return (
     <AuthLayout
       title="Forgot your password?"
-      subtitle="Enter your email address and we'll send you a link to reset your password"
+      subtitle="Enter your email address and we'll send you a reset link"
     >
-      <form className="space-y-6" onSubmit={handleSubmit}>
+      <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
         <Input
           id="email"
-          name="email"
           type="email"
           autoComplete="email"
-          required
           label="Email address"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          error={error}
+          error={errors.email?.message}
           leftIcon={<EnvelopeIcon className="h-5 w-5" />}
+          {...register("email", {
+            required: "Email is required",
+            pattern: {
+              value: /\S+@\S+\.\S+/,
+              message: "Email is invalid",
+            },
+          })}
         />
+
+        {errors.root && (
+          <div className="bg-error-50 border border-error-200 rounded-md p-3">
+            <p className="text-error-600 text-sm text-center">
+              {errors.root.message}
+            </p>
+          </div>
+        )}
 
         <Button
           type="submit"

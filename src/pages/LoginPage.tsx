@@ -1,63 +1,39 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
 import { EnvelopeIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import AuthLayout from "../components/AuthLayout";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { useAuth } from "../context/AuthContext";
 
+interface LoginFormData {
+  email: string;
+  password: string;
+}
+
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<{
-    email?: string;
-    password?: string;
-    general?: string;
-  }>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+  } = useForm<LoginFormData>();
 
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
-  const validateForm = () => {
-    const newErrors: { email?: string; password?: string } = {};
-
-    if (!email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Email is invalid";
-    }
-
-    if (!password) {
-      newErrors.password = "Password is required";
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) return;
-
-    setIsSubmitting(true);
-    setErrors({});
-
+  const onSubmit = async (data: LoginFormData) => {
     try {
-      const { error } = await signIn(email, password);
+      const { error } = await signIn(data.email, data.password);
 
       if (error) {
-        setErrors({ general: error.message });
+        setError("root", { message: error.message });
       } else {
         navigate("/home");
       }
     } catch (err) {
-      setErrors({ general: "An error occurred. Please try again." });
-    } finally {
-      setIsSubmitting(false);
+      setError("root", { message: "An error occurred. Please try again." });
     }
   };
 
@@ -66,38 +42,44 @@ const LoginPage: React.FC = () => {
       title="Sign in to your account"
       subtitle="Welcome back! Please sign in to continue"
     >
-      <form className="space-y-6" onSubmit={handleSubmit}>
+      <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-4">
           <Input
             id="email"
-            name="email"
             type="email"
             autoComplete="email"
-            required
             label="Email address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            error={errors.email}
+            error={errors.email?.message}
             leftIcon={<EnvelopeIcon className="h-5 w-5" />}
+            {...register("email", {
+              required: "Email is required",
+              pattern: {
+                value: /\S+@\S+\.\S+/,
+                message: "Email is invalid",
+              },
+            })}
           />
           <Input
             id="password"
-            name="password"
             type="password"
             autoComplete="current-password"
-            required
             label="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            error={errors.password}
+            error={errors.password?.message}
             leftIcon={<LockClosedIcon className="h-5 w-5" />}
+            {...register("password", {
+              required: "Password is required",
+              minLength: {
+                value: 6,
+                message: "Password must be at least 6 characters",
+              },
+            })}
           />
         </div>
 
-        {errors.general && (
+        {errors.root && (
           <div className="bg-error-50 border border-error-200 rounded-md p-3">
             <p className="text-error-600 text-sm text-center">
-              {errors.general}
+              {errors.root.message}
             </p>
           </div>
         )}

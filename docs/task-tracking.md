@@ -1,6 +1,6 @@
 # CRM Application - Task Tracking
 
-## Phase 1: Foundation (Authentication & Authorization)
+## Phase 1: Foundation (Authentication & User Management)
 
 ### Authentication Setup - Must Have
 
@@ -26,25 +26,13 @@
 - [ ] Add "Remember me" functionality
 - [ ] Implement last login tracking
 - [ ] Add failed login attempt monitoring
-- [ ] Set up multi-factor authentication preparation
 
 ### User Management - Must Have
 
 - [ ] Create user profile schema in Supabase
-- [ ] Implement user account creation (Admin only)
-- [ ] Set up user role assignment (Admin/Sales)
-- [ ] Create user management interface for Admins
-- [ ] Implement user account status management
-
-### Role-Based Access Control - Must Have
-
-- [ ] Define role schemas and permissions (Admin/Sales)
-- [ ] Implement role assignment logic
-- [ ] Create permission middleware for API routes
-- [ ] Add role-based route protection
-- [ ] Set up role-based UI rendering
-- [ ] Implement row-level security in Supabase
-- [ ] Create role-based navigation structure
+- [ ] Implement user profile management interface
+- [ ] Set up user account settings
+- [ ] Create user preferences management
 
 ## Phase 2: Core Features (Contact & Deal Management)
 
@@ -89,7 +77,7 @@
   - [ ] id (UUID, Primary Key)
   - [ ] title (String, Required)
   - [ ] contact_id (UUID, Foreign Key)
-  - [ ] assigned_user_id (UUID, Foreign Key)
+  - [ ] user_id (UUID, Foreign Key - owner of the deal)
   - [ ] stage (Enum: lead, prospect, negotiation, closed-won, closed-lost)
   - [ ] monetary_value (Decimal)
   - [ ] expected_close_date (Date)
@@ -102,7 +90,6 @@
 - [ ] Create deal detail view with all information
 - [ ] Add deal editing functionality
 - [ ] Implement deal-contact relationships
-- [ ] Add deal assignment to users
 - [ ] Create deal status tracking
 
 ### Deal Management - Should Have
@@ -110,7 +97,7 @@
 - [ ] Add deal stage transition tracking with timestamps
 - [ ] Implement deal value and probability tracking
 - [ ] Create deal progress visualization
-- [ ] Add deal filtering by stage, user, date range
+- [ ] Add deal filtering by stage, date range
 - [ ] Implement deal search functionality
 
 ### Deal Management - Could Have
@@ -131,16 +118,15 @@
   - [ ] description (Text)
   - [ ] due_date (Date)
   - [ ] status (Enum: pending, completed, overdue)
-  - [ ] assigned_user_id (UUID, Foreign Key)
+  - [ ] user_id (UUID, Foreign Key - task owner)
   - [ ] created_at, updated_at
 - [ ] Set up task model and validation
 - [ ] Build task creation interface linked to deals
 - [ ] Implement task list view with filtering
-- [ ] Add task assignment functionality
 - [ ] Create task detail view
 - [ ] Implement due date management
 - [ ] Add task status updates
-- [ ] Create task filtering by status, user, due date
+- [ ] Create task filtering by status, due date
 
 ### Task Management - Should Have
 
@@ -180,7 +166,7 @@
 
 - [ ] Create communication timeline view
 - [ ] Add communication templates
-- [ ] Implement communication filtering by type, date, user
+- [ ] Implement communication filtering by type, date
 - [ ] Create communication analytics
 
 ### Communication Tracking - Could Have
@@ -210,7 +196,7 @@
 
 ### Dashboard - Must Have
 
-- [ ] Create dashboard layout with role-based content
+- [ ] Create dashboard layout with user-specific content
 - [ ] Add key metrics cards:
   - [ ] Total contacts
   - [ ] Active deals
@@ -224,9 +210,9 @@
 ### Dashboard - Should Have
 
 - [ ] Add deal closure rate charts
-- [ ] Implement user performance comparisons
 - [ ] Create customizable dashboard widgets
 - [ ] Add real-time data updates
+- [ ] Implement personal performance tracking
 
 ### Reports - Must Have
 
@@ -238,10 +224,10 @@
   - [ ] Overall lead to closed-won percentage
   - [ ] Stage-to-stage conversion rates
   - [ ] Time period analysis
-- [ ] Build user performance report:
+- [ ] Build personal performance report:
   - [ ] Individual metrics (deals closed, revenue)
   - [ ] Activity tracking
-  - [ ] Performance ranking
+  - [ ] Performance trends
 - [ ] Create revenue forecasts report:
   - [ ] Monthly projections
   - [ ] Probability-weighted forecasts
@@ -327,21 +313,14 @@
 
 ## User Journey Implementation
 
-### Admin User Journeys
-
-- [ ] Implement system setup workflow
-- [ ] Create user management interface
-- [ ] Build system monitoring dashboard
-- [ ] Add data management tools
-- [ ] Create comprehensive reporting access
-
-### Sales User Journeys
+### Individual User Journeys
 
 - [ ] Implement contact management workflow
 - [ ] Create deal pipeline interface
 - [ ] Build daily operations dashboard
 - [ ] Add task management interface
 - [ ] Create personal performance views
+- [ ] Implement data import/export workflows
 
 ## Technical Implementation
 
@@ -357,7 +336,7 @@
 
 - [ ] Configure Supabase project
 - [ ] Set up database schemas with proper relationships
-- [ ] Implement row-level security policies
+- [ ] Implement row-level security policies for user data isolation
 - [ ] Create API endpoints with proper authentication
 - [ ] Set up real-time subscriptions
 
@@ -409,7 +388,7 @@ Each phase requires:
 **Phase 1 - Foundation (70% Complete)**
 
 - ✅ **Completed**: Basic authentication system with Supabase, login/signup pages, password reset, email verification, protected routes, and session management
-- 🟨 **Remaining**: User management interface, role-based access control system, and user profile management features
+- 🟨 **Remaining**: User profile management interface and user settings features
 - 📝 **Note**: The authentication forms are currently using basic validation instead of React Hook Form as specified in requirements
 
 ## Success Criteria by Phase
@@ -417,10 +396,10 @@ Each phase requires:
 ### Phase 1 Success Criteria
 
 - [ ] User authentication works reliably
-- [ ] Role-based access control is functioning
+- [ ] User profile management is functioning
 - [ ] User sessions are managed properly
 - [ ] Password reset flow is working
-- [ ] Admin can manage user accounts
+- [ ] User can manage their account settings
 
 ### Phase 2 Success Criteria
 
@@ -434,7 +413,6 @@ Each phase requires:
 
 - [ ] Tasks can be created and managed efficiently
 - [ ] Communications are being logged accurately
-- [ ] Assignments work properly across users
 - [ ] History is maintained accurately
 - [ ] Purchase tracking is functional
 
@@ -473,7 +451,7 @@ Each phase requires:
 
 ---
 
-**Document Version**: 2.0  
+**Document Version**: 3.0  
 **Last Updated**: May 31, 2025  
 **Maintainer**: Technical Team  
-**Based on**: User Journey v1.0, PRD v1.0, Execution Plan v1.0
+**Based on**: Simplified User Requirements (No Role System)

@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { Button } from "../components/ui/Button";
@@ -8,6 +9,8 @@ import {
   ChartBarIcon,
   CogIcon,
   SwatchIcon,
+  Cog6ToothIcon,
+  ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 
 const HomePage: React.FC = () => {
@@ -55,14 +58,44 @@ const HomePage: React.FC = () => {
                 CRM Dashboard
               </h1>
             </div>
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-4">
               <ThemeToggle showLabel={false} />
               <span className="text-sm text-text-secondary">
                 Welcome, {user?.user_metadata?.name || user?.email}!
               </span>
-              <Button variant="outline" onClick={handleLogout} size="sm">
-                Logout
-              </Button>
+
+              {/* Navigation Menu */}
+              <div className="flex items-center space-x-2">
+                <Link to="/profile">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center space-x-1"
+                  >
+                    <UserIcon className="h-4 w-4" />
+                    <span>Profile</span>
+                  </Button>
+                </Link>
+                <Link to="/settings">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center space-x-1"
+                  >
+                    <Cog6ToothIcon className="h-4 w-4" />
+                    <span>Settings</span>
+                  </Button>
+                </Link>
+                <Button
+                  variant="outline"
+                  onClick={handleLogout}
+                  size="sm"
+                  className="flex items-center space-x-1"
+                >
+                  <ArrowRightOnRectangleIcon className="h-4 w-4" />
+                  <span>Logout</span>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
