@@ -99,12 +99,14 @@ const ContactsPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Contacts</h1>
-          <p className="text-gray-600">Manage your contact relationships</p>
+          <h1 className="text-3xl font-bold text-text-primary">Contacts</h1>
+          <p className="text-text-secondary mt-2">
+            Manage your contact relationships
+          </p>
         </div>
         <Button
           color="primary"
@@ -116,13 +118,13 @@ const ContactsPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="bg-surface border border-border">
         <CardBody>
           <div className="flex gap-4 flex-wrap">
             <Input
               placeholder="Search contacts..."
               startContent={
-                <MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />
+                <MagnifyingGlassIcon className="w-4 h-4 text-text-secondary" />
               }
               value={filters.search || ""}
               onValueChange={handleSearch}
@@ -153,9 +155,9 @@ const ContactsPage: React.FC = () => {
 
       {/* Error State */}
       {error && (
-        <Card className="border-danger">
+        <Card className="border-error bg-error-50">
           <CardBody>
-            <p className="text-danger">{error}</p>
+            <p className="text-error-600">{error}</p>
           </CardBody>
         </Card>
       )}
@@ -163,17 +165,20 @@ const ContactsPage: React.FC = () => {
       {/* Contacts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {contacts.map((contact) => (
-          <Card key={contact.id} className="hover:shadow-lg transition-shadow">
+          <Card
+            key={contact.id}
+            className="bg-surface border border-border hover:shadow-lg transition-shadow"
+          >
             <CardBody>
               <div className="space-y-3">
                 {/* Contact Header */}
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-text-primary">
                       {contact.name}
                     </h3>
                     {contact.job_title && (
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-text-secondary">
                         {contact.job_title}
                       </p>
                     )}
@@ -201,20 +206,20 @@ const ContactsPage: React.FC = () => {
 
                 {/* Contact Details */}
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2 text-sm text-text-secondary">
                     <EnvelopeIcon className="w-4 h-4 flex-shrink-0" />
                     <span className="truncate">{contact.email}</span>
                   </div>
 
                   {contact.phone && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-text-secondary">
                       <PhoneIcon className="w-4 h-4 flex-shrink-0" />
                       <span>{contact.phone}</span>
                     </div>
                   )}
 
                   {contact.company && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-text-secondary">
                       <BuildingOfficeIcon className="w-4 h-4 flex-shrink-0" />
                       <span className="truncate">{contact.company}</span>
                     </div>
@@ -222,8 +227,8 @@ const ContactsPage: React.FC = () => {
                 </div>
 
                 {/* Contact Meta */}
-                <div className="pt-2 border-t border-gray-100">
-                  <p className="text-xs text-gray-500">
+                <div className="pt-2 border-t border-border">
+                  <p className="text-xs text-text-secondary">
                     Added {new Date(contact.created_at).toLocaleDateString()}
                   </p>
                 </div>
@@ -238,13 +243,13 @@ const ContactsPage: React.FC = () => {
         <Card>
           <CardBody className="text-center py-12">
             <div className="space-y-3">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
-                <PlusIcon className="w-8 h-8 text-gray-400" />
+              <div className="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto">
+                <PlusIcon className="w-8 h-8 text-text-secondary" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-medium text-text-primary">
                 No contacts found
               </h3>
-              <p className="text-gray-600">
+              <p className="text-text-secondary">
                 {filters.search || filters.company
                   ? "Try adjusting your filters or search terms"
                   : "Get started by adding your first contact"}

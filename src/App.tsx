@@ -9,6 +9,7 @@ import { HeroUIProvider } from "@heroui/react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Layout from "./components/Layout";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
@@ -45,12 +46,14 @@ const AppRouter: React.FC = () => {
         element={user ? <Navigate to="/home" replace /> : <ResetPasswordPage />}
       />
 
-      {/* Protected routes */}
+      {/* Protected routes with Layout */}
       <Route
         path="/home"
         element={
           <ProtectedRoute>
-            <HomePage />
+            <Layout>
+              <HomePage />
+            </Layout>
           </ProtectedRoute>
         }
       />
@@ -58,7 +61,9 @@ const AppRouter: React.FC = () => {
         path="/contacts"
         element={
           <ProtectedRoute>
-            <ContactsPage />
+            <Layout>
+              <ContactsPage />
+            </Layout>
           </ProtectedRoute>
         }
       />
@@ -66,7 +71,9 @@ const AppRouter: React.FC = () => {
         path="/deals"
         element={
           <ProtectedRoute>
-            <DealsPage />
+            <Layout>
+              <DealsPage />
+            </Layout>
           </ProtectedRoute>
         }
       />
@@ -74,7 +81,9 @@ const AppRouter: React.FC = () => {
         path="/profile"
         element={
           <ProtectedRoute>
-            <ProfilePage />
+            <Layout>
+              <ProfilePage />
+            </Layout>
           </ProtectedRoute>
         }
       />
@@ -82,7 +91,9 @@ const AppRouter: React.FC = () => {
         path="/settings"
         element={
           <ProtectedRoute>
-            <SettingsPage />
+            <Layout>
+              <SettingsPage />
+            </Layout>
           </ProtectedRoute>
         }
       />

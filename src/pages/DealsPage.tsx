@@ -13,20 +13,16 @@ import {
   useDisclosure,
   Chip,
   Tooltip,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+  Select,
+  SelectItem,
+  Input,
 } from "@heroui/react";
-import {
-  DndContext,
-  DragOverlay,
-  useDroppable,
-  useSensor,
-  useSensors,
-  PointerSensor,
-} from "@dnd-kit/core";
-import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
 import {
   PlusIcon,
   PencilIcon,
@@ -35,115 +31,42 @@ import {
   CurrencyDollarIcon,
   CalendarIcon,
   UserIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon,
 } from "@heroicons/react/24/outline";
-import { useDealsPipeline } from "../hooks/useDeals";
+import { useDeals } from "../hooks/useDeals";
 import { DealForm } from "../components/DealForm";
-import { DealCard } from "../components/DealCard";
-import type { Deal, DealStage } from "../types";
+import type { Deal, DealStage, DealFilters } from "../types";
 
 const stageConfig: Record<
   DealStage,
-  { label: string; color: string; bgColor: string }
+  {
+    label: string;
+    color:
+      | "default"
+      | "primary"
+      | "secondary"
+      | "success"
+      | "warning"
+      | "danger";
+  }
 > = {
-  lead: { label: "Lead", color: "text-gray-700", bgColor: "bg-gray-50" },
-  prospect: {
-    label: "Prospect",
-    color: "text-blue-700",
-    bgColor: "bg-blue-50",
-  },
-  negotiation: {
-    label: "Negotiation",
-    color: "text-orange-700",
-    bgColor: "bg-orange-50",
-  },
-  "closed-won": {
-    label: "Closed Won",
-    color: "text-green-700",
-    bgColor: "bg-green-50",
-  },
-  "closed-lost": {
-    label: "Closed Lost",
-    color: "text-red-700",
-    bgColor: "bg-red-50",
-  },
-};
-
-const DroppableStage: React.FC<{
-  stage: DealStage;
-  config: { label: string; color: string; bgColor: string };
-  deals: Deal[];
-  onEdit: (deal: Deal) => void;
-  onView: (deal: Deal) => void;
-  onDelete: (deal: Deal) => void;
-  formatCurrency: (amount: number) => string;
-  getTotalValue: (deals: Deal[]) => number;
-}> = ({
-  stage,
-  config,
-  deals,
-  onEdit,
-  onView,
-  onDelete,
-  formatCurrency,
-  getTotalValue,
-}) => {
-  const { setNodeRef, isOver } = useDroppable({
-    id: stage,
-  });
-
-  return (
-    <Card
-      ref={setNodeRef}
-      className={`${config.bgColor} border-2 border-dashed ${
-        isOver ? "border-blue-400 bg-blue-100" : "border-gray-200"
-      } min-h-[500px] transition-all`}
-    >
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-center w-full">
-          <div>
-            <h3 className={`font-semibold ${config.color}`}>{config.label}</h3>
-            <p className="text-sm text-gray-500">
-              {deals.length} deal{deals.length !== 1 ? "s" : ""}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-sm font-medium text-gray-900">
-              {formatCurrency(getTotalValue(deals))}
-            </p>
-          </div>
-        </div>
-      </CardHeader>
-      <CardBody className="pt-0">
-        <SortableContext
-          items={deals.map((deal) => deal.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          <div className="space-y-3">
-            {deals.map((deal) => (
-              <DealCard
-                key={deal.id}
-                deal={deal}
-                onEdit={onEdit}
-                onView={onView}
-                onDelete={onDelete}
-                formatCurrency={formatCurrency}
-              />
-            ))}
-          </div>
-        </SortableContext>
-      </CardBody>
-    </Card>
-  );
+  lead: { label: "Lead", color: "default" },
+  prospect: { label: "Prospect", color: "primary" },
+  negotiation: { label: "Negotiation", color: "warning" },
+  "closed-won": { label: "Closed Won", color: "success" },
+  "closed-lost": { label: "Closed Lost", color: "danger" },
 };
 
 const DealsPage: React.FC = () => {
-  const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [dealToDelete, setDealToDelete] = useState<Deal | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [filters, setFilters] = useState<DealFilters>({});
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const { pipeline, loading, error, updateDealStage, refresh } =
-    useDealsPipeline();
+  const { deals, loading, error, updateDeal, deleteDeal, refresh } =
+    useDeals(filters);
 
   const {
     isOpen: isCreateOpen,
@@ -163,59 +86,6 @@ const DealsPage: React.FC = () => {
     onClose: onViewClose,
   } = useDisclosure();
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
-  );
-
-  const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    const dealId = active.id as string;
-
-    // Find the deal being dragged
-    for (const stage of Object.keys(pipeline) as DealStage[]) {
-      const deal = pipeline[stage].find((d) => d.id === dealId);
-      if (deal) {
-        setActiveDeal(deal);
-        break;
-      }
-    }
-  };
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (!over) {
-      setActiveDeal(null);
-      return;
-    }
-
-    const dealId = active.id as string;
-    const newStage = over.id as DealStage;
-
-    // Find the current stage of the deal
-    let currentStage: DealStage | null = null;
-    for (const stage of Object.keys(pipeline) as DealStage[]) {
-      if (pipeline[stage].some((d) => d.id === dealId)) {
-        currentStage = stage;
-        break;
-      }
-    }
-
-    if (currentStage && currentStage !== newStage) {
-      try {
-        await updateDealStage(dealId, newStage, currentStage);
-      } catch (error) {
-        console.error("Failed to update deal stage:", error);
-      }
-    }
-
-    setActiveDeal(null);
-  };
-
   const handleEdit = (deal: Deal) => {
     setSelectedDeal(deal);
     onEditOpen();
@@ -232,11 +102,15 @@ const DealsPage: React.FC = () => {
   };
 
   const confirmDelete = async () => {
-    // This would use the deleteDeal function from useDeals hook
-    // For now, we'll just close the modal
-    setIsDeleteConfirmOpen(false);
-    setDealToDelete(null);
-    refresh();
+    if (dealToDelete) {
+      try {
+        await deleteDeal(dealToDelete.id);
+        setIsDeleteConfirmOpen(false);
+        setDealToDelete(null);
+      } catch (error) {
+        console.error("Failed to delete deal:", error);
+      }
+    }
   };
 
   const handleFormSuccess = () => {
@@ -246,6 +120,14 @@ const DealsPage: React.FC = () => {
     refresh();
   };
 
+  const handleStageChange = async (dealId: string, newStage: DealStage) => {
+    try {
+      await updateDeal(dealId, { stage: newStage });
+    } catch (error) {
+      console.error("Failed to update deal stage:", error);
+    }
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -253,9 +135,34 @@ const DealsPage: React.FC = () => {
     }).format(amount);
   };
 
-  const getTotalValue = (deals: Deal[]) => {
-    return deals.reduce((sum, deal) => sum + (deal.monetary_value || 0), 0);
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setFilters((prev) => ({ ...prev, search: value || undefined }));
   };
+
+  const handleStageFilter = (stage: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      stage: stage === "all" ? undefined : (stage as DealStage),
+    }));
+  };
+
+  const filteredDeals = deals.filter((deal) => {
+    if (
+      searchTerm &&
+      !deal.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      !deal.contact?.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      !deal.contact?.email.toLowerCase().includes(searchTerm.toLowerCase())
+    ) {
+      return false;
+    }
+    return true;
+  });
+
+  const totalValue = filteredDeals.reduce(
+    (sum, deal) => sum + (deal.monetary_value || 0),
+    0
+  );
 
   if (loading) {
     return (
@@ -266,13 +173,13 @@ const DealsPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Deal Pipeline</h1>
-          <p className="text-gray-600">
-            Manage your sales pipeline and track deal progress
+          <h1 className="text-3xl font-bold text-text-primary">Deals</h1>
+          <p className="text-text-secondary mt-2">
+            Manage your sales deals and track progress
           </p>
         </div>
         <Button
@@ -286,53 +193,187 @@ const DealsPage: React.FC = () => {
 
       {/* Error State */}
       {error && (
-        <Card className="border-danger">
+        <Card className="border-error bg-error-50">
           <CardBody>
-            <p className="text-danger">{error}</p>
+            <p className="text-error-600">{error}</p>
           </CardBody>
         </Card>
       )}
 
-      {/* Pipeline */}
-      <DndContext
-        sensors={sensors}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {(Object.keys(stageConfig) as DealStage[]).map((stage) => {
-            const stageDeals = pipeline[stage] || [];
-            const config = stageConfig[stage];
-
-            return (
-              <DroppableStage
-                key={stage}
-                stage={stage}
-                config={config}
-                deals={stageDeals}
-                onEdit={handleEdit}
-                onView={handleView}
-                onDelete={handleDelete}
-                formatCurrency={formatCurrency}
-                getTotalValue={getTotalValue}
+      {/* Filters and Search */}
+      <Card>
+        <CardBody>
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center flex-1">
+              <Input
+                placeholder="Search deals, contacts..."
+                startContent={
+                  <MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />
+                }
+                value={searchTerm}
+                onValueChange={handleSearchChange}
+                className="w-full sm:w-80"
               />
-            );
-          })}
-        </div>
+              <Select
+                placeholder="Filter by stage"
+                startContent={<FunnelIcon className="w-4 h-4" />}
+                selectedKeys={filters.stage ? [filters.stage] : ["all"]}
+                onSelectionChange={(keys) => {
+                  const stage = Array.from(keys)[0] as string;
+                  handleStageFilter(stage);
+                }}
+                className="w-full sm:w-48"
+              >
+                {[
+                  <SelectItem key="all">All Stages</SelectItem>,
+                  ...(
+                    Object.entries(stageConfig) as [
+                      DealStage,
+                      (typeof stageConfig)[DealStage]
+                    ][]
+                  ).map(([key, config]) => (
+                    <SelectItem key={key}>{config.label}</SelectItem>
+                  )),
+                ]}
+              </Select>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-500">
+                {filteredDeals.length} deal
+                {filteredDeals.length !== 1 ? "s" : ""}
+              </p>
+              <p className="text-lg font-semibold text-green-600">
+                {formatCurrency(totalValue)}
+              </p>
+            </div>
+          </div>
+        </CardBody>
+      </Card>
 
-        <DragOverlay>
-          {activeDeal ? (
-            <DealCard
-              deal={activeDeal}
-              onEdit={() => {}}
-              onView={() => {}}
-              onDelete={() => {}}
-              formatCurrency={formatCurrency}
-              isDragging
-            />
-          ) : null}
-        </DragOverlay>
-      </DndContext>
+      {/* Deals Table */}
+      <Card>
+        <Table aria-label="Deals table">
+          <TableHeader>
+            <TableColumn>DEAL</TableColumn>
+            <TableColumn>CONTACT</TableColumn>
+            <TableColumn>STAGE</TableColumn>
+            <TableColumn>VALUE</TableColumn>
+            <TableColumn>PROBABILITY</TableColumn>
+            <TableColumn>CLOSE DATE</TableColumn>
+            <TableColumn>ACTIONS</TableColumn>
+          </TableHeader>
+          <TableBody emptyContent="No deals found">
+            {filteredDeals.map((deal) => (
+              <TableRow key={deal.id}>
+                <TableCell>
+                  <div>
+                    <p className="font-semibold text-gray-900">{deal.title}</p>
+                    <p className="text-sm text-gray-500">
+                      Created {new Date(deal.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {deal.contact ? (
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {deal.contact.name}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {deal.contact.email}
+                      </p>
+                      {deal.contact.company && (
+                        <p className="text-sm text-gray-500">
+                          {deal.contact.company}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">No contact</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Select
+                    selectedKeys={[deal.stage]}
+                    onSelectionChange={(keys) => {
+                      const newStage = Array.from(keys)[0] as DealStage;
+                      if (newStage !== deal.stage) {
+                        handleStageChange(deal.id, newStage);
+                      }
+                    }}
+                    className="w-40"
+                    size="sm"
+                  >
+                    {(
+                      Object.entries(stageConfig) as [
+                        DealStage,
+                        (typeof stageConfig)[DealStage]
+                      ][]
+                    ).map(([key, config]) => (
+                      <SelectItem key={key}>{config.label}</SelectItem>
+                    ))}
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  <span className="font-semibold text-green-600">
+                    {formatCurrency(deal.monetary_value)}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <Chip size="sm" variant="flat" color="default">
+                    {deal.probability_percentage}%
+                  </Chip>
+                </TableCell>
+                <TableCell>
+                  {deal.expected_close_date ? (
+                    <div className="flex items-center gap-1 text-sm">
+                      <CalendarIcon className="w-4 h-4 text-gray-400" />
+                      {new Date(deal.expected_close_date).toLocaleDateString()}
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">Not set</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-1">
+                    <Tooltip content="View details">
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        onPress={() => handleView(deal)}
+                      >
+                        <EyeIcon className="w-4 h-4" />
+                      </Button>
+                    </Tooltip>
+                    <Tooltip content="Edit deal">
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        onPress={() => handleEdit(deal)}
+                      >
+                        <PencilIcon className="w-4 h-4" />
+                      </Button>
+                    </Tooltip>
+                    <Tooltip content="Delete deal">
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        color="danger"
+                        onPress={() => handleDelete(deal)}
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </Button>
+                    </Tooltip>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
 
       {/* Create Deal Modal */}
       <Modal isOpen={isCreateOpen} onClose={onCreateClose} size="2xl">
@@ -371,7 +412,7 @@ const DealsPage: React.FC = () => {
                     </h2>
                     <div className="flex items-center gap-2 mt-2">
                       <Chip
-                        color={stageConfig[selectedDeal.stage].color as any}
+                        color={stageConfig[selectedDeal.stage].color}
                         variant="flat"
                       >
                         {stageConfig[selectedDeal.stage].label}
