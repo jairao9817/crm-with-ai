@@ -16,6 +16,9 @@ import {
   SelectItem,
   Textarea,
   Avatar,
+  Divider,
+  Badge,
+  Progress,
 } from "@heroui/react";
 import {
   CheckIcon,
@@ -23,6 +26,10 @@ import {
   ExclamationTriangleIcon,
   CalendarIcon,
   DocumentTextIcon,
+  BuildingOfficeIcon,
+  UserIcon,
+  PlayIcon,
+  PauseIcon,
 } from "@heroicons/react/24/outline";
 import { useForm, Controller } from "react-hook-form";
 import { TaskService } from "../services/taskService";
@@ -151,6 +158,26 @@ const TaskDetailPage: React.FC = () => {
     return new Date(task.due_date) < new Date();
   };
 
+  const getDaysUntilDue = (dueDate: string) => {
+    const due = new Date(dueDate);
+    const now = new Date();
+    const diffTime = due.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const getProgressValue = (status: TaskStatus) => {
+    switch (status) {
+      case "completed":
+        return 100;
+      case "overdue":
+        return 75;
+      case "pending":
+      default:
+        return 25;
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
   };
@@ -171,7 +198,9 @@ const TaskDetailPage: React.FC = () => {
       item={task}
       title="Task Details"
       subtitle={
-        task?.due_date ? `Due: ${formatDate(task.due_date)}` : "No due date"
+        task?.due_date
+          ? `Task #${task.id?.slice(-8)}`
+          : `Task #${task?.id?.slice(-8)}`
       }
       onBack={() => navigate("/tasks")}
       onEdit={handleEdit}
@@ -180,154 +209,339 @@ const TaskDetailPage: React.FC = () => {
     >
       {currentTask && (
         <>
-          {/* Task Details */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              <Card>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-3">
-                      <Avatar
-                        icon={getStatusIcon(currentTask.status)}
-                        className={`bg-${getStatusColor(
-                          currentTask.status
-                        )}-100 text-${getStatusColor(currentTask.status)}`}
-                      />
-                      <div>
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                          {currentTask.title}
-                        </h2>
-                        <Chip
-                          color={getStatusColor(currentTask.status)}
-                          variant="flat"
-                          size="sm"
-                          startContent={getStatusIcon(currentTask.status)}
-                        >
-                          {currentTask.status}
-                        </Chip>
-                      </div>
+          {/* Hero Section with Task Overview */}
+          <Card className="mb-8 border-none shadow-lg bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20">
+            <CardBody className="p-8">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                <div className="flex items-start gap-4 flex-1">
+                  <div className="relative">
+                    <Avatar
+                      icon={getStatusIcon(currentTask.status)}
+                      className={`w-16 h-16 bg-${getStatusColor(
+                        currentTask.status
+                      )}-100 dark:bg-${getStatusColor(
+                        currentTask.status
+                      )}-900/20 text-${getStatusColor(
+                        currentTask.status
+                      )} text-large`}
+                    />
+                    <Badge
+                      color={getStatusColor(currentTask.status)}
+                      className="absolute -top-1 -right-1"
+                      size="lg"
+                    >
+                      •
+                    </Badge>
+                  </div>
+                  <div className="space-y-3 flex-1">
+                    <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+                      {currentTask.title}
+                    </h1>
+                    <div className="flex flex-wrap items-center gap-4">
+                      <Chip
+                        color={getStatusColor(currentTask.status)}
+                        variant="solid"
+                        size="lg"
+                        startContent={getStatusIcon(currentTask.status)}
+                        className="font-semibold"
+                      >
+                        {currentTask.status.toUpperCase()}
+                      </Chip>
+                      {currentTask.due_date && (
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                          <CalendarIcon className="w-4 h-4" />
+                          <span className="text-sm font-medium">
+                            Due: {formatDate(currentTask.due_date)}
+                            {getDaysUntilDue(currentTask.due_date) >= 0 && (
+                              <span className="ml-1 text-xs">
+                                ({getDaysUntilDue(currentTask.due_date)} days)
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Status Actions */}
-                    <div className="flex gap-2">
-                      {currentTask.status === "pending" && (
-                        <Button
-                          color="success"
-                          size="sm"
-                          startContent={<CheckIcon className="w-4 h-4" />}
-                          onPress={() => handleStatusChange("completed")}
-                        >
-                          Mark Complete
-                        </Button>
-                      )}
-                      {currentTask.status === "completed" && (
-                        <Button
-                          color="warning"
-                          size="sm"
-                          startContent={<ClockIcon className="w-4 h-4" />}
-                          onPress={() => handleStatusChange("pending")}
-                        >
-                          Mark Pending
-                        </Button>
-                      )}
-                      {currentTask.status === "overdue" && (
-                        <Button
-                          color="success"
-                          size="sm"
-                          startContent={<CheckIcon className="w-4 h-4" />}
-                          onPress={() => handleStatusChange("completed")}
-                        >
-                          Mark Complete
-                        </Button>
-                      )}
+                    {/* Progress Indicator */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                          Progress
+                        </span>
+                        <span className="text-sm font-bold text-gray-900 dark:text-white">
+                          {getProgressValue(currentTask.status)}%
+                        </span>
+                      </div>
+                      <Progress
+                        value={getProgressValue(currentTask.status)}
+                        color={getStatusColor(currentTask.status)}
+                        className="max-w-md"
+                      />
                     </div>
                   </div>
+                </div>
+
+                {/* Status Actions */}
+                <div className="flex flex-col gap-3">
+                  {currentTask.status === "pending" && (
+                    <Button
+                      color="success"
+                      size="lg"
+                      startContent={<CheckIcon className="w-5 h-5" />}
+                      onPress={() => handleStatusChange("completed")}
+                      className="font-semibold"
+                    >
+                      Mark Complete
+                    </Button>
+                  )}
+                  {currentTask.status === "completed" && (
+                    <Button
+                      color="warning"
+                      size="lg"
+                      startContent={<PauseIcon className="w-5 h-5" />}
+                      onPress={() => handleStatusChange("pending")}
+                      className="font-semibold"
+                    >
+                      Reopen Task
+                    </Button>
+                  )}
+                  {currentTask.status === "overdue" && (
+                    <Button
+                      color="success"
+                      size="lg"
+                      startContent={<CheckIcon className="w-5 h-5" />}
+                      onPress={() => handleStatusChange("completed")}
+                      className="font-semibold"
+                    >
+                      Complete Now
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+            {/* Main Content - Takes up 2/3 on large screens */}
+            <div className="xl:col-span-3 space-y-8">
+              {/* Task Description */}
+              <Card className="shadow-md">
+                <CardHeader className="pb-4 border-b border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/20">
+                      <DocumentTextIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                      Task Description
+                    </h2>
+                  </div>
                 </CardHeader>
-                <CardBody>
+                <CardBody className="pt-6">
                   {currentTask.description ? (
-                    <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white mb-2">
-                        Description
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                    <div className="prose prose-gray dark:prose-invert max-w-none">
+                      <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed whitespace-pre-wrap">
                         {currentTask.description}
                       </p>
                     </div>
                   ) : (
-                    <p className="text-gray-500 dark:text-gray-400 italic">
-                      No description provided for this task.
-                    </p>
+                    <div className="text-center py-8">
+                      <DocumentTextIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                      <p className="text-gray-500 dark:text-gray-400 italic">
+                        No description provided for this task.
+                      </p>
+                    </div>
                   )}
                 </CardBody>
               </Card>
-            </div>
 
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Deal Information */}
-              {currentTask.deal && <DealCard deal={currentTask.deal} />}
-
-              {/* Task Metadata */}
-              <Card>
-                <CardHeader>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Task Details
-                  </h3>
+              {/* Task Timeline */}
+              <Card className="shadow-md">
+                <CardHeader className="pb-4 border-b border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20">
+                      <CalendarIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                      Timeline & Details
+                    </h2>
+                  </div>
                 </CardHeader>
-                <CardBody>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <CalendarIcon className="w-4 h-4 text-gray-500" />
-                      <div>
-                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                          Due Date
-                        </span>
-                        <p className="text-gray-900 dark:text-white">
-                          {currentTask.due_date
-                            ? formatDate(currentTask.due_date)
-                            : "Not set"}
+                <CardBody className="pt-6">
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <CalendarIcon className="w-4 h-4 text-gray-500" />
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Due Date
+                          </span>
+                        </div>
+                        <p className="text-lg font-medium text-gray-900 dark:text-white pl-6">
+                          {currentTask.due_date ? (
+                            <>
+                              {formatDate(currentTask.due_date)}
+                              {getDaysUntilDue(currentTask.due_date) < 0 ? (
+                                <span className="ml-2 text-red-500 text-sm font-semibold">
+                                  (Overdue)
+                                </span>
+                              ) : getDaysUntilDue(currentTask.due_date) <= 3 ? (
+                                <span className="ml-2 text-orange-500 text-sm font-semibold">
+                                  (Due Soon)
+                                </span>
+                              ) : null}
+                            </>
+                          ) : (
+                            "Not set"
+                          )}
                         </p>
                       </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(currentTask.status)}
-                      <div>
-                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                          Status
-                        </span>
-                        <p className="text-gray-900 dark:text-white capitalize">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(currentTask.status)}
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Current Status
+                          </span>
+                        </div>
+                        <p className="text-lg font-medium text-gray-900 dark:text-white capitalize pl-6">
                           {currentTask.status}
                         </p>
                       </div>
                     </div>
 
-                    {currentTask.created_at && (
-                      <div className="flex items-center gap-2">
-                        <DocumentTextIcon className="w-4 h-4 text-gray-500" />
-                        <div>
-                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                            Created
-                          </span>
-                          <p className="text-gray-900 dark:text-white">
+                    <Divider />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {currentTask.created_at && (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <PlayIcon className="w-4 h-4 text-gray-500" />
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                              Created
+                            </span>
+                          </div>
+                          <p className="text-gray-900 dark:text-white font-medium pl-6">
                             {formatDateTime(currentTask.created_at)}
                           </p>
                         </div>
-                      </div>
-                    )}
-
-                    {currentTask.updated_at &&
-                      currentTask.updated_at !== currentTask.created_at && (
-                        <div>
-                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                            Last Updated
-                          </span>
-                          <p className="text-gray-900 dark:text-white">
-                            {formatDateTime(currentTask.updated_at)}
-                          </p>
-                        </div>
                       )}
+
+                      {currentTask.updated_at &&
+                        currentTask.updated_at !== currentTask.created_at && (
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <ClockIcon className="w-4 h-4 text-gray-500" />
+                              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                Last Updated
+                              </span>
+                            </div>
+                            <p className="text-gray-900 dark:text-white font-medium pl-6">
+                              {formatDateTime(currentTask.updated_at)}
+                            </p>
+                          </div>
+                        )}
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
+            </div>
+
+            {/* Sidebar - Takes up 1/3 on large screens */}
+            <div className="xl:col-span-1 space-y-6">
+              {/* Deal Information */}
+              {currentTask.deal && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 mb-3">
+                    <BuildingOfficeIcon className="w-4 h-4 text-gray-500" />
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      Related Deal
+                    </h3>
+                  </div>
+                  <DealCard deal={currentTask.deal} />
+                </div>
+              )}
+
+              {/* Quick Actions */}
+              <Card className="shadow-md">
+                <CardHeader>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Quick Actions
+                  </h3>
+                </CardHeader>
+                <CardBody>
+                  <div className="space-y-3">
+                    <Button
+                      color="primary"
+                      variant="flat"
+                      fullWidth
+                      onPress={handleEdit}
+                      startContent={<DocumentTextIcon className="w-4 h-4" />}
+                    >
+                      Edit Task
+                    </Button>
+                    <Button
+                      color="danger"
+                      variant="flat"
+                      fullWidth
+                      onPress={handleDelete}
+                      startContent={
+                        <ExclamationTriangleIcon className="w-4 h-4" />
+                      }
+                    >
+                      Delete Task
+                    </Button>
+                  </div>
+                </CardBody>
+              </Card>
+
+              {/* Task Statistics */}
+              <Card className="shadow-md">
+                <CardHeader>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Task Info
+                  </h3>
+                </CardHeader>
+                <CardBody>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        Progress
+                      </span>
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        {getProgressValue(currentTask.status)}%
+                      </span>
+                    </div>
+                    <Progress
+                      value={getProgressValue(currentTask.status)}
+                      color={getStatusColor(currentTask.status)}
+                      size="sm"
+                    />
+
+                    {currentTask.due_date && (
+                      <>
+                        <Divider />
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            Days Until Due
+                          </span>
+                          <span
+                            className={`font-semibold ${
+                              getDaysUntilDue(currentTask.due_date) < 0
+                                ? "text-red-500"
+                                : getDaysUntilDue(currentTask.due_date) <= 3
+                                ? "text-orange-500"
+                                : "text-green-500"
+                            }`}
+                          >
+                            {getDaysUntilDue(currentTask.due_date) < 0
+                              ? `${Math.abs(
+                                  getDaysUntilDue(currentTask.due_date)
+                                )} overdue`
+                              : getDaysUntilDue(currentTask.due_date)}
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </CardBody>
               </Card>
@@ -335,11 +549,18 @@ const TaskDetailPage: React.FC = () => {
           </div>
 
           {/* Edit Modal */}
-          <Modal isOpen={isEditOpen} onClose={onEditClose} size="2xl">
+          <Modal
+            isOpen={isEditOpen}
+            onClose={onEditClose}
+            size="3xl"
+            scrollBehavior="inside"
+          >
             <ModalContent>
               <form onSubmit={handleSubmit(onEditSubmit)}>
-                <ModalHeader>Edit Task</ModalHeader>
-                <ModalBody className="space-y-4">
+                <ModalHeader className="text-xl font-bold">
+                  Edit Task
+                </ModalHeader>
+                <ModalBody className="space-y-6">
                   <Controller
                     name="title"
                     control={control}
@@ -351,6 +572,7 @@ const TaskDetailPage: React.FC = () => {
                         placeholder="Enter task title"
                         isInvalid={!!errors.title}
                         errorMessage={errors.title?.message}
+                        startContent={<DocumentTextIcon className="w-4 h-4" />}
                       />
                     )}
                   />
@@ -363,30 +585,58 @@ const TaskDetailPage: React.FC = () => {
                         {...field}
                         label="Description"
                         placeholder="Enter task description (optional)"
-                        minRows={3}
+                        minRows={4}
                       />
                     )}
                   />
 
-                  <Controller
-                    name="deal_id"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        label="Deal (Optional)"
-                        placeholder="Select a deal"
-                        selectedKeys={field.value ? [field.value] : []}
-                        onSelectionChange={(keys) =>
-                          field.onChange(Array.from(keys)[0] as string)
-                        }
-                      >
-                        {deals.map((deal) => (
-                          <SelectItem key={deal.id}>{deal.title}</SelectItem>
-                        ))}
-                      </Select>
-                    )}
-                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Controller
+                      name="deal_id"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          {...field}
+                          label="Deal (Optional)"
+                          placeholder="Select a deal"
+                          selectedKeys={field.value ? [field.value] : []}
+                          onSelectionChange={(keys) =>
+                            field.onChange(Array.from(keys)[0] as string)
+                          }
+                          startContent={
+                            <BuildingOfficeIcon className="w-4 h-4" />
+                          }
+                        >
+                          {deals.map((deal) => (
+                            <SelectItem key={deal.id}>{deal.title}</SelectItem>
+                          ))}
+                        </Select>
+                      )}
+                    />
+
+                    <Controller
+                      name="status"
+                      control={control}
+                      rules={{ required: "Status is required" }}
+                      render={({ field }) => (
+                        <Select
+                          {...field}
+                          label="Status"
+                          placeholder="Select status"
+                          isInvalid={!!errors.status}
+                          errorMessage={errors.status?.message}
+                          selectedKeys={field.value ? [field.value] : []}
+                          onSelectionChange={(keys) =>
+                            field.onChange(Array.from(keys)[0] as TaskStatus)
+                          }
+                        >
+                          <SelectItem key="pending">Pending</SelectItem>
+                          <SelectItem key="completed">Completed</SelectItem>
+                          <SelectItem key="overdue">Overdue</SelectItem>
+                        </Select>
+                      )}
+                    />
+                  </div>
 
                   <Controller
                     name="due_date"
@@ -396,30 +646,8 @@ const TaskDetailPage: React.FC = () => {
                         {...field}
                         type="date"
                         label="Due Date (Optional)"
+                        startContent={<CalendarIcon className="w-4 h-4" />}
                       />
-                    )}
-                  />
-
-                  <Controller
-                    name="status"
-                    control={control}
-                    rules={{ required: "Status is required" }}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        label="Status"
-                        placeholder="Select status"
-                        isInvalid={!!errors.status}
-                        errorMessage={errors.status?.message}
-                        selectedKeys={field.value ? [field.value] : []}
-                        onSelectionChange={(keys) =>
-                          field.onChange(Array.from(keys)[0] as TaskStatus)
-                        }
-                      >
-                        <SelectItem key="pending">Pending</SelectItem>
-                        <SelectItem key="completed">Completed</SelectItem>
-                        <SelectItem key="overdue">Overdue</SelectItem>
-                      </Select>
                     )}
                   />
                 </ModalBody>
