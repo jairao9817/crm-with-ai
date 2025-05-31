@@ -37,6 +37,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useDeals } from "../hooks/useDeals";
 import { DealForm } from "../components/DealForm";
+import { DealCloseModal } from "../components/DealCloseModal";
 import type { Deal, DealStage, DealFilters } from "../types";
 
 const stageConfig: Record<
@@ -62,6 +63,7 @@ const stageConfig: Record<
 const DealsPage: React.FC = () => {
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [dealToDelete, setDealToDelete] = useState<Deal | null>(null);
+  const [dealToClose, setDealToClose] = useState<Deal | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [filters, setFilters] = useState<DealFilters>({});
   const [searchTerm, setSearchTerm] = useState("");
@@ -79,6 +81,12 @@ const DealsPage: React.FC = () => {
     isOpen: isEditOpen,
     onOpen: onEditOpen,
     onClose: onEditClose,
+  } = useDisclosure();
+
+  const {
+    isOpen: isCloseModalOpen,
+    onOpen: onCloseModalOpen,
+    onClose: onCloseModalClose,
   } = useDisclosure();
 
   const navigate = useNavigate();
@@ -116,9 +124,28 @@ const DealsPage: React.FC = () => {
     refresh();
   };
 
-  const handleStageChange = async (dealId: string, newStage: DealStage) => {
+  const handleCloseSuccess = () => {
+    setDealToClose(null);
+    onCloseModalClose();
+    refresh();
+  };
+
+  const handleStageChange = async (deal: Deal, newStage: DealStage) => {
     try {
-      await updateDeal(dealId, { stage: newStage });
+      // If closing as won and deal has contact and value, show modal for purchase creation
+      if (
+        newStage === "closed-won" &&
+        deal.stage !== "closed-won" &&
+        deal.contact_id &&
+        deal.monetary_value > 0
+      ) {
+        setDealToClose(deal);
+        onCloseModalOpen();
+        return;
+      }
+
+      // Otherwise, update directly
+      await updateDeal(deal.id, { stage: newStage });
     } catch (error) {
       console.error("Failed to update deal stage:", error);
     }
@@ -299,7 +326,7 @@ const DealsPage: React.FC = () => {
                       onSelectionChange={(keys) => {
                         const newStage = Array.from(keys)[0] as DealStage;
                         if (newStage !== deal.stage) {
-                          handleStageChange(deal.id, newStage);
+                          handleStageChange(deal, newStage);
                         }
                       }}
                       className="w-40"
@@ -429,6 +456,16 @@ const DealsPage: React.FC = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* Deal Close Modal */}
+      {dealToClose && (
+        <DealCloseModal
+          isOpen={isCloseModalOpen}
+          onClose={onCloseModalClose}
+          deal={dealToClose}
+          onSuccess={handleCloseSuccess}
+        />
+      )}
     </div>
   );
 };

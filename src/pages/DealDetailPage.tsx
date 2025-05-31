@@ -27,10 +27,12 @@ import {
   ChatBubbleLeftRightIcon,
   ClipboardDocumentListIcon,
   UserIcon,
+  CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useDeal } from "../hooks/useDeals";
 import { useDealRelatedData } from "../hooks/useDealRelatedData";
 import { DealForm } from "../components/DealForm";
+import { DealCloseModal } from "../components/DealCloseModal";
 import type { DealStage } from "../types";
 
 const stageConfig: Record<
@@ -78,9 +80,31 @@ const DealDetailPage: React.FC = () => {
     onClose: onEditClose,
   } = useDisclosure();
 
+  const {
+    isOpen: isCloseModalOpen,
+    onOpen: onCloseModalOpen,
+    onClose: onCloseModalClose,
+  } = useDisclosure();
+
   const handleFormSuccess = () => {
     onEditClose();
     refresh();
+  };
+
+  const handleCloseSuccess = () => {
+    onCloseModalClose();
+    refresh();
+  };
+
+  const handleCloseDeal = () => {
+    if (
+      deal &&
+      deal.stage !== "closed-won" &&
+      deal.contact_id &&
+      deal.monetary_value > 0
+    ) {
+      onCloseModalOpen();
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -207,13 +231,26 @@ const DealDetailPage: React.FC = () => {
             </div>
           </div>
         </div>
-        <Button
-          color="primary"
-          startContent={<PencilIcon className="w-4 h-4" />}
-          onPress={onEditOpen}
-        >
-          Edit Deal
-        </Button>
+        <div className="flex gap-2">
+          {deal.stage !== "closed-won" &&
+            deal.contact_id &&
+            deal.monetary_value > 0 && (
+              <Button
+                color="success"
+                startContent={<CheckCircleIcon className="w-4 h-4" />}
+                onPress={handleCloseDeal}
+              >
+                Close as Won
+              </Button>
+            )}
+          <Button
+            color="primary"
+            startContent={<PencilIcon className="w-4 h-4" />}
+            onPress={onEditOpen}
+          >
+            Edit Deal
+          </Button>
+        </div>
       </div>
 
       {/* Deal Progress */}
@@ -650,6 +687,16 @@ const DealDetailPage: React.FC = () => {
           </ModalBody>
         </ModalContent>
       </Modal>
+
+      {/* Deal Close Modal */}
+      {deal && (
+        <DealCloseModal
+          isOpen={isCloseModalOpen}
+          onClose={onCloseModalClose}
+          deal={deal}
+          onSuccess={handleCloseSuccess}
+        />
+      )}
     </div>
   );
 };

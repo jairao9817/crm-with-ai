@@ -132,6 +132,12 @@ export class DealService {
       throw new Error("User not authenticated");
     }
 
+    // Get current deal state if stage is being updated
+    let currentDeal: Deal | null = null;
+    if (dealData.stage) {
+      currentDeal = await this.getDeal(id);
+    }
+
     const { data, error } = await supabase
       .from("deals")
       .update({
@@ -151,12 +157,98 @@ export class DealService {
       throw new Error(`Failed to update deal: ${error.message}`);
     }
 
+    // Auto-create purchase history if deal is being closed as won
+    if (
+      dealData.stage === "closed-won" &&
+      currentDeal &&
+      currentDeal.stage !== "closed-won"
+    ) {
+      try {
+        await this.createPurchaseHistoryFromDeal(data);
+      } catch (error) {
+        console.warn("Failed to create purchase history from deal:", error);
+        // Don't fail the deal update if purchase history creation fails
+      }
+    }
+
     return data;
   }
 
   // Update deal stage (for drag and drop)
   static async updateDealStage(id: string, stage: DealStage): Promise<Deal> {
-    return this.updateDeal(id, { stage });
+    // Get the current deal first
+    const currentDeal = await this.getDeal(id);
+    if (!currentDeal) {
+      throw new Error("Deal not found");
+    }
+
+    // Update the deal
+    const updatedDeal = await this.updateDeal(id, { stage });
+
+    return updatedDeal;
+  }
+
+  // Close deal as won with optional manual purchase creation
+  static async closeDealAsWon(
+    id: string,
+    createPurchaseHistory: boolean = true
+  ): Promise<Deal> {
+    const currentDeal = await this.getDeal(id);
+    if (!currentDeal) {
+      throw new Error("Deal not found");
+    }
+
+    if (currentDeal.stage === "closed-won") {
+      return currentDeal; // Already closed as won
+    }
+
+    // Update deal to closed-won
+    const updatedDeal = await this.updateDeal(id, { stage: "closed-won" });
+
+    // Create purchase history if requested and not already created automatically
+    if (
+      createPurchaseHistory &&
+      currentDeal.contact_id &&
+      currentDeal.monetary_value > 0
+    ) {
+      try {
+        await this.createPurchaseHistoryFromDeal(updatedDeal);
+      } catch (error) {
+        console.warn("Failed to create purchase history from deal:", error);
+        // Don't fail the deal update if purchase history creation fails
+      }
+    }
+
+    return updatedDeal;
+  }
+
+  // Private method to create purchase history from deal
+  private static async createPurchaseHistoryFromDeal(
+    deal: Deal
+  ): Promise<void> {
+    if (!deal.contact_id || deal.monetary_value <= 0) {
+      return; // Skip if no contact or no value
+    }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    // Import PurchaseHistoryService to avoid circular dependency
+    const { PurchaseHistoryService } = await import("./purchaseHistoryService");
+
+    await PurchaseHistoryService.createPurchaseHistory({
+      contact_id: deal.contact_id,
+      deal_id: deal.id,
+      date: new Date().toISOString().split("T")[0], // Today's date
+      amount: deal.monetary_value,
+      product_service: deal.title, // Use deal title as product/service
+      status: "completed",
+    });
   }
 
   // Delete a deal
