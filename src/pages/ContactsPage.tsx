@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardBody,
@@ -22,6 +23,7 @@ import {
   EnvelopeIcon,
   PhoneIcon,
   BuildingOfficeIcon,
+  EyeIcon,
 } from "@heroicons/react/24/outline";
 import { useContacts } from "../hooks/useContacts";
 import { ContactForm } from "../components/ContactForm";
@@ -47,6 +49,8 @@ const ContactsPage: React.FC = () => {
     onOpen: onEditOpen,
     onClose: onEditClose,
   } = useDisclosure();
+
+  const navigate = useNavigate();
 
   const handleSearch = (value: string) => {
     setFilters((prev) => ({ ...prev, search: value || undefined }));
@@ -83,6 +87,10 @@ const ContactsPage: React.FC = () => {
     onEditClose();
     setSelectedContact(null);
     refresh();
+  };
+
+  const handleViewContact = (contactId: string) => {
+    navigate(`/contacts/${contactId}`);
   };
 
   // Get unique companies for filter
@@ -167,7 +175,9 @@ const ContactsPage: React.FC = () => {
         {contacts.map((contact) => (
           <Card
             key={contact.id}
-            className="bg-surface border border-border hover:shadow-lg transition-shadow"
+            className="bg-surface border border-border hover:shadow-lg transition-shadow cursor-pointer"
+            isPressable
+            onPress={() => handleViewContact(contact.id)}
           >
             <CardBody>
               <div className="space-y-3">
@@ -183,12 +193,25 @@ const ContactsPage: React.FC = () => {
                       </p>
                     )}
                   </div>
-                  <div className="flex gap-1">
+                  <div
+                    className="flex gap-1"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      onPress={() => handleViewContact(contact.id)}
+                      title="View Details"
+                    >
+                      <EyeIcon className="w-4 h-4" />
+                    </Button>
                     <Button
                       isIconOnly
                       size="sm"
                       variant="light"
                       onPress={() => handleEdit(contact)}
+                      title="Edit Contact"
                     >
                       <PencilIcon className="w-4 h-4" />
                     </Button>
@@ -198,6 +221,7 @@ const ContactsPage: React.FC = () => {
                       variant="light"
                       color="danger"
                       onPress={() => handleDelete(contact)}
+                      title="Delete Contact"
                     >
                       <TrashIcon className="w-4 h-4" />
                     </Button>

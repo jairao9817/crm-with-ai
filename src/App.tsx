@@ -19,7 +19,9 @@ import DashboardPage from "./pages/DashboardPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import ContactsPage from "./pages/ContactsPage";
+import ContactDetailPage from "./pages/ContactDetailPage";
 import DealsPage from "./pages/DealsPage";
+import DealDetailPage from "./pages/DealDetailPage";
 import TasksPage from "./pages/TasksPage";
 import CommunicationsPage from "./pages/CommunicationsPage";
 import PurchaseHistoryPage from "./pages/PurchaseHistoryPage";
@@ -84,11 +86,31 @@ const AppRouter: React.FC = () => {
         }
       />
       <Route
+        path="/contacts/:id"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <ContactDetailPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/deals"
         element={
           <ProtectedRoute>
             <Layout>
               <DealsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/deals/:id"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <DealDetailPage />
             </Layout>
           </ProtectedRoute>
         }

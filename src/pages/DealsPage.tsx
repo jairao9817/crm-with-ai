@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardBody,
@@ -80,11 +81,7 @@ const DealsPage: React.FC = () => {
     onClose: onEditClose,
   } = useDisclosure();
 
-  const {
-    isOpen: isViewOpen,
-    onOpen: onViewOpen,
-    onClose: onViewClose,
-  } = useDisclosure();
+  const navigate = useNavigate();
 
   const handleEdit = (deal: Deal) => {
     setSelectedDeal(deal);
@@ -92,8 +89,7 @@ const DealsPage: React.FC = () => {
   };
 
   const handleView = (deal: Deal) => {
-    setSelectedDeal(deal);
-    onViewOpen();
+    navigate(`/deals/${deal.id}`);
   };
 
   const handleDelete = (deal: Deal) => {
@@ -264,7 +260,11 @@ const DealsPage: React.FC = () => {
           </TableHeader>
           <TableBody emptyContent="No deals found">
             {filteredDeals.map((deal) => (
-              <TableRow key={deal.id}>
+              <TableRow
+                key={deal.id}
+                className="cursor-pointer hover:bg-gray-50"
+                onClick={() => handleView(deal)}
+              >
                 <TableCell>
                   <div>
                     <p className="font-semibold text-gray-900">{deal.title}</p>
@@ -293,26 +293,28 @@ const DealsPage: React.FC = () => {
                   )}
                 </TableCell>
                 <TableCell>
-                  <Select
-                    selectedKeys={[deal.stage]}
-                    onSelectionChange={(keys) => {
-                      const newStage = Array.from(keys)[0] as DealStage;
-                      if (newStage !== deal.stage) {
-                        handleStageChange(deal.id, newStage);
-                      }
-                    }}
-                    className="w-40"
-                    size="sm"
-                  >
-                    {(
-                      Object.entries(stageConfig) as [
-                        DealStage,
-                        (typeof stageConfig)[DealStage]
-                      ][]
-                    ).map(([key, config]) => (
-                      <SelectItem key={key}>{config.label}</SelectItem>
-                    ))}
-                  </Select>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Select
+                      selectedKeys={[deal.stage]}
+                      onSelectionChange={(keys) => {
+                        const newStage = Array.from(keys)[0] as DealStage;
+                        if (newStage !== deal.stage) {
+                          handleStageChange(deal.id, newStage);
+                        }
+                      }}
+                      className="w-40"
+                      size="sm"
+                    >
+                      {(
+                        Object.entries(stageConfig) as [
+                          DealStage,
+                          (typeof stageConfig)[DealStage]
+                        ][]
+                      ).map(([key, config]) => (
+                        <SelectItem key={key}>{config.label}</SelectItem>
+                      ))}
+                    </Select>
+                  </div>
                 </TableCell>
                 <TableCell>
                   <span className="font-semibold text-green-600">
@@ -335,7 +337,10 @@ const DealsPage: React.FC = () => {
                   )}
                 </TableCell>
                 <TableCell>
-                  <div className="flex gap-1">
+                  <div
+                    className="flex gap-1"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Tooltip content="View details">
                       <Button
                         isIconOnly
@@ -394,131 +399,6 @@ const DealsPage: React.FC = () => {
               <DealForm deal={selectedDeal} onSuccess={handleFormSuccess} />
             )}
           </ModalBody>
-        </ModalContent>
-      </Modal>
-
-      {/* View Deal Modal */}
-      <Modal isOpen={isViewOpen} onClose={onViewClose} size="3xl">
-        <ModalContent>
-          <ModalHeader>Deal Details</ModalHeader>
-          <ModalBody>
-            {selectedDeal && (
-              <div className="space-y-6">
-                {/* Deal Header */}
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900">
-                      {selectedDeal.title}
-                    </h2>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Chip
-                        color={stageConfig[selectedDeal.stage].color}
-                        variant="flat"
-                      >
-                        {stageConfig[selectedDeal.stage].label}
-                      </Chip>
-                      <span className="text-2xl font-bold text-green-600">
-                        {formatCurrency(selectedDeal.monetary_value)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="light"
-                      startContent={<PencilIcon className="w-4 h-4" />}
-                      onPress={() => {
-                        onViewClose();
-                        handleEdit(selectedDeal);
-                      }}
-                    >
-                      Edit
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Deal Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="font-medium text-gray-900 mb-2">
-                        Contact Information
-                      </h3>
-                      {selectedDeal.contact ? (
-                        <div className="space-y-1">
-                          <p className="text-sm text-gray-600">
-                            <UserIcon className="w-4 h-4 inline mr-2" />
-                            {selectedDeal.contact.name}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {selectedDeal.contact.email}
-                          </p>
-                          {selectedDeal.contact.company && (
-                            <p className="text-sm text-gray-600">
-                              {selectedDeal.contact.company}
-                            </p>
-                          )}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-gray-500">
-                          No contact associated
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <h3 className="font-medium text-gray-900 mb-2">
-                        Deal Value
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        <CurrencyDollarIcon className="w-4 h-4 inline mr-2" />
-                        {formatCurrency(selectedDeal.monetary_value)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="font-medium text-gray-900 mb-2">
-                        Probability
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {selectedDeal.probability_percentage}%
-                      </p>
-                    </div>
-
-                    {selectedDeal.expected_close_date && (
-                      <div>
-                        <h3 className="font-medium text-gray-900 mb-2">
-                          Expected Close Date
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          <CalendarIcon className="w-4 h-4 inline mr-2" />
-                          {new Date(
-                            selectedDeal.expected_close_date
-                          ).toLocaleDateString()}
-                        </p>
-                      </div>
-                    )}
-
-                    <div>
-                      <h3 className="font-medium text-gray-900 mb-2">
-                        Created
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {new Date(selectedDeal.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="light" onPress={onViewClose}>
-              Close
-            </Button>
-          </ModalFooter>
         </ModalContent>
       </Modal>
 
