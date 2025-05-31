@@ -24,8 +24,11 @@ import ContactDetailPage from "./pages/ContactDetailPage";
 import DealsPage from "./pages/DealsPage";
 import DealDetailPage from "./pages/DealDetailPage";
 import TasksPage from "./pages/TasksPage";
+import TaskDetailPage from "./pages/TaskDetailPage";
 import CommunicationsPage from "./pages/CommunicationsPage";
+import CommunicationDetailPage from "./pages/CommunicationDetailPage";
 import PurchaseHistoryPage from "./pages/PurchaseHistoryPage";
+import PurchaseHistoryDetailPage from "./pages/PurchaseHistoryDetailPage";
 import "./App.css";
 
 const AppRouter: React.FC = () => {
@@ -137,6 +140,16 @@ const AppRouter: React.FC = () => {
         }
       />
       <Route
+        path="/tasks/:id"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <TaskDetailPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/communications"
         element={
           <ProtectedRoute>
@@ -147,11 +160,31 @@ const AppRouter: React.FC = () => {
         }
       />
       <Route
+        path="/communications/:id"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <CommunicationDetailPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/purchase-history"
         element={
           <ProtectedRoute>
             <Layout>
               <PurchaseHistoryPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/purchase-history/:id"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <PurchaseHistoryDetailPage />
             </Layout>
           </ProtectedRoute>
         }

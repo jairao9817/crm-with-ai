@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Button,
   Card,
@@ -15,19 +16,13 @@ import {
   useDisclosure,
   Chip,
   Textarea,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
   Spinner,
-  Badge,
   Avatar,
 } from "@heroui/react";
 import {
   PlusIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
-  EllipsisVerticalIcon,
   PhoneIcon,
   EnvelopeIcon,
   CalendarIcon,
@@ -41,7 +36,6 @@ import { DealService } from "../services/dealService";
 import type {
   Communication,
   CreateCommunicationInput,
-  UpdateCommunicationInput,
   CommunicationFilters,
   Contact,
   Deal,
@@ -58,22 +52,16 @@ interface CommunicationFormData {
 }
 
 const CommunicationsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [communications, setCommunications] = useState<Communication[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [selectedCommunication, setSelectedCommunication] =
-    useState<Communication | null>(null);
   const [filters, setFilters] = useState<CommunicationFilters>({});
   const [showFilters, setShowFilters] = useState(false);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const {
-    isOpen: isEditOpen,
-    onOpen: onEditOpen,
-    onClose: onEditClose,
-  } = useDisclosure();
 
   const {
     control,
@@ -83,16 +71,7 @@ const CommunicationsPage: React.FC = () => {
     formState: { errors },
   } = useForm<CommunicationFormData>();
 
-  const {
-    control: editControl,
-    handleSubmit: handleEditSubmit,
-    reset: resetEdit,
-    watch: watchEdit,
-    formState: { errors: editErrors },
-  } = useForm<CommunicationFormData>();
-
   const selectedContactId = watch("contact_id");
-  const selectedEditContactId = watchEdit("contact_id");
 
   useEffect(() => {
     loadCommunications();
@@ -153,61 +132,6 @@ const CommunicationsPage: React.FC = () => {
     }
   };
 
-  const onEditSubmit = async (data: CommunicationFormData) => {
-    if (!selectedCommunication) return;
-
-    try {
-      setSubmitting(true);
-      const communicationData: UpdateCommunicationInput = {
-        contact_id: data.contact_id,
-        deal_id: data.deal_id || undefined,
-        type: data.type,
-        subject: data.subject,
-        content: data.content,
-        communication_date: data.communication_date,
-      };
-
-      await CommunicationService.updateCommunication(
-        selectedCommunication.id,
-        communicationData
-      );
-      await loadCommunications();
-      resetEdit();
-      onEditClose();
-      setSelectedCommunication(null);
-    } catch (error) {
-      console.error("Failed to update communication:", error);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleEdit = (communication: Communication) => {
-    setSelectedCommunication(communication);
-    resetEdit({
-      contact_id: communication.contact_id,
-      deal_id: communication.deal_id || "",
-      type: communication.type,
-      subject: communication.subject || "",
-      content: communication.content || "",
-      communication_date: communication.communication_date
-        ? new Date(communication.communication_date).toISOString().split("T")[0]
-        : "",
-    });
-    onEditOpen();
-  };
-
-  const handleDelete = async (communicationId: string) => {
-    if (window.confirm("Are you sure you want to delete this communication?")) {
-      try {
-        await CommunicationService.deleteCommunication(communicationId);
-        await loadCommunications();
-      } catch (error) {
-        console.error("Failed to delete communication:", error);
-      }
-    }
-  };
-
   const getTypeIcon = (type: CommunicationType) => {
     switch (type) {
       case "phone_call":
@@ -243,7 +167,11 @@ const CommunicationsPage: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const handleCommunicationClick = (communicationId: string) => {
+    navigate(`/communications/${communicationId}`);
   };
 
   const communicationsByType = communications.reduce((acc, comm) => {
@@ -426,117 +354,96 @@ const CommunicationsPage: React.FC = () => {
         </CardBody>
       </Card>
 
-      {/* Communications Timeline */}
+      {/* Communications Grid */}
       {loading ? (
         <div className="flex justify-center py-12">
           <Spinner size="lg" />
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {communications.map((communication) => (
             <Card
               key={communication.id}
-              className="hover:shadow-md transition-shadow"
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              isPressable
+              onPress={() => handleCommunicationClick(communication.id)}
             >
               <CardBody className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-4 flex-1">
-                    <Avatar
-                      icon={getTypeIcon(communication.type)}
-                      className={`bg-${getTypeColor(
-                        communication.type
-                      )}-100 text-${getTypeColor(communication.type)}`}
-                    />
+                <div className="flex items-start gap-3 mb-4">
+                  <Avatar
+                    icon={getTypeIcon(communication.type)}
+                    className={`bg-${getTypeColor(
+                      communication.type
+                    )}-100 text-${getTypeColor(communication.type)}`}
+                    size="sm"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+                      {communication.subject ||
+                        `${communication.type.replace("_", " ")} Communication`}
+                    </h3>
+                    <Chip
+                      color={getTypeColor(communication.type)}
+                      variant="flat"
+                      size="sm"
+                      startContent={getTypeIcon(communication.type)}
+                      className="mt-1"
+                    >
+                      {communication.type.replace("_", " ")}
+                    </Chip>
+                  </div>
+                </div>
 
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <h3 className="font-semibold text-gray-900 dark:text-white">
-                          {communication.subject ||
-                            `${communication.type.replace("_", " ")} with ${
-                              communication.contact?.name
-                            }`}
-                        </h3>
-                        <Chip
-                          color={getTypeColor(communication.type)}
-                          variant="flat"
-                          size="sm"
-                          startContent={getTypeIcon(communication.type)}
-                        >
-                          {communication.type.replace("_", " ")}
-                        </Chip>
-                      </div>
-
-                      {communication.content && (
-                        <p className="text-gray-600 dark:text-gray-400 mb-4">
-                          {communication.content}
-                        </p>
-                      )}
-
-                      <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                        <span>
-                          Contact: {communication.contact?.name} (
-                          {communication.contact?.email})
-                        </span>
-                        {communication.deal && (
-                          <Badge
-                            content={communication.deal.stage}
-                            color="primary"
-                            variant="flat"
-                          >
-                            <span>Deal: {communication.deal.title}</span>
-                          </Badge>
-                        )}
-                        <span>
-                          {formatDate(communication.communication_date)}
-                        </span>
-                      </div>
-                    </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <span className="font-medium">Contact:</span>
+                    <span className="truncate">
+                      {communication.contact?.name}
+                    </span>
                   </div>
 
-                  <Dropdown>
-                    <DropdownTrigger>
-                      <Button isIconOnly variant="light" size="sm">
-                        <EllipsisVerticalIcon className="w-4 h-4" />
-                      </Button>
-                    </DropdownTrigger>
-                    <DropdownMenu>
-                      <DropdownItem
-                        key="edit"
-                        onPress={() => handleEdit(communication)}
-                      >
-                        Edit
-                      </DropdownItem>
-                      <DropdownItem
-                        key="delete"
-                        onPress={() => handleDelete(communication.id)}
-                        className="text-danger"
-                        color="danger"
-                      >
-                        Delete
-                      </DropdownItem>
-                    </DropdownMenu>
-                  </Dropdown>
+                  {communication.deal && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <span className="font-medium">Deal:</span>
+                      <span className="truncate">
+                        {communication.deal.title}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <span className="font-medium">Date:</span>
+                    <span>{formatDate(communication.communication_date)}</span>
+                  </div>
                 </div>
+
+                {communication.content && (
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mt-3 line-clamp-2">
+                    {communication.content}
+                  </p>
+                )}
               </CardBody>
             </Card>
           ))}
 
           {communications.length === 0 && (
-            <Card>
-              <CardBody className="p-12 text-center">
-                <ChatBubbleLeftRightIcon className="w-16 h-16 text-gray-400 mx-auto mb-6" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
-                  No communications found
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  Start logging your customer communications to track
-                  interactions.
-                </p>
-                <Button color="primary" onPress={onOpen}>
-                  Log Communication
-                </Button>
-              </CardBody>
-            </Card>
+            <div className="col-span-full">
+              <Card>
+                <CardBody className="p-12 text-center">
+                  <ChatBubbleLeftRightIcon className="w-16 h-16 text-gray-400 mx-auto mb-6" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                    No communications found
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    Start logging your customer communications to track
+                    interactions.
+                  </p>
+                  <Button color="primary" onPress={onOpen}>
+                    Log Communication
+                  </Button>
+                </CardBody>
+              </Card>
+            </div>
           )}
         </div>
       )}
@@ -660,126 +567,6 @@ const CommunicationsPage: React.FC = () => {
               </Button>
               <Button color="primary" type="submit" isLoading={submitting}>
                 Log Communication
-              </Button>
-            </ModalFooter>
-          </form>
-        </ModalContent>
-      </Modal>
-
-      {/* Edit Communication Modal */}
-      <Modal isOpen={isEditOpen} onClose={onEditClose} size="2xl">
-        <ModalContent>
-          <form onSubmit={handleEditSubmit(onEditSubmit)}>
-            <ModalHeader>Edit Communication</ModalHeader>
-            <ModalBody className="space-y-4">
-              <Controller
-                name="contact_id"
-                control={editControl}
-                rules={{ required: "Contact is required" }}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    label="Contact"
-                    placeholder="Select a contact"
-                    isInvalid={!!editErrors.contact_id}
-                    errorMessage={editErrors.contact_id?.message}
-                    selectedKeys={field.value ? [field.value] : []}
-                    onSelectionChange={(keys) =>
-                      field.onChange(Array.from(keys)[0] as string)
-                    }
-                  >
-                    {contacts.map((contact) => (
-                      <SelectItem key={contact.id}>
-                        {contact.name} ({contact.email})
-                      </SelectItem>
-                    ))}
-                  </Select>
-                )}
-              />
-
-              <Controller
-                name="type"
-                control={editControl}
-                rules={{ required: "Type is required" }}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    label="Communication Type"
-                    placeholder="Select type"
-                    isInvalid={!!editErrors.type}
-                    errorMessage={editErrors.type?.message}
-                    selectedKeys={field.value ? [field.value] : []}
-                    onSelectionChange={(keys) =>
-                      field.onChange(Array.from(keys)[0] as CommunicationType)
-                    }
-                  >
-                    <SelectItem key="phone_call">Phone Call</SelectItem>
-                    <SelectItem key="email">Email</SelectItem>
-                    <SelectItem key="meeting">Meeting</SelectItem>
-                    <SelectItem key="note">Note</SelectItem>
-                  </Select>
-                )}
-              />
-
-              <Controller
-                name="deal_id"
-                control={editControl}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    label="Deal (Optional)"
-                    placeholder="Select a deal"
-                    selectedKeys={field.value ? [field.value] : []}
-                    onSelectionChange={(keys) =>
-                      field.onChange(Array.from(keys)[0] as string)
-                    }
-                  >
-                    {getContactDeals(selectedEditContactId).map((deal) => (
-                      <SelectItem key={deal.id}>{deal.title}</SelectItem>
-                    ))}
-                  </Select>
-                )}
-              />
-
-              <Controller
-                name="subject"
-                control={editControl}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    label="Subject (Optional)"
-                    placeholder="Enter communication subject"
-                  />
-                )}
-              />
-
-              <Controller
-                name="content"
-                control={editControl}
-                render={({ field }) => (
-                  <Textarea
-                    {...field}
-                    label="Content"
-                    placeholder="Enter communication details"
-                    minRows={3}
-                  />
-                )}
-              />
-
-              <Controller
-                name="communication_date"
-                control={editControl}
-                render={({ field }) => (
-                  <Input {...field} type="datetime-local" label="Date & Time" />
-                )}
-              />
-            </ModalBody>
-            <ModalFooter>
-              <Button variant="light" onPress={onEditClose}>
-                Cancel
-              </Button>
-              <Button color="primary" type="submit" isLoading={submitting}>
-                Update Communication
               </Button>
             </ModalFooter>
           </form>

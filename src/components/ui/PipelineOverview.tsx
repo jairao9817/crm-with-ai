@@ -38,7 +38,9 @@ const PipelineOverview: React.FC<PipelineOverviewProps> = ({
   }
 
   // Calculate max value for scaling bars
-  const maxValue = Math.max(...Object.values(data).map((stage) => stage.value));
+  const maxValue = Math.max(
+    ...Object.values(data).map((stage) => stage.value || 0)
+  );
 
   return (
     <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
@@ -50,7 +52,7 @@ const PipelineOverview: React.FC<PipelineOverviewProps> = ({
         {Object.entries(data).map(([stageKey, stageData]) => {
           const config = stageConfig[stageKey as keyof typeof stageConfig];
           const percentage =
-            maxValue > 0 ? (stageData.value / maxValue) * 100 : 0;
+            maxValue > 0 ? ((stageData.value || 0) / maxValue) * 100 : 0;
 
           return (
             <div key={stageKey} className="space-y-2">
@@ -71,7 +73,7 @@ const PipelineOverview: React.FC<PipelineOverviewProps> = ({
               </div>
 
               <div className="flex justify-between items-center text-xs text-text-secondary">
-                <span>${stageData.value.toLocaleString()}</span>
+                <span>${stageData.value?.toLocaleString() || "0"}</span>
                 <span>{percentage.toFixed(1)}% of pipeline value</span>
               </div>
             </div>
@@ -87,7 +89,7 @@ const PipelineOverview: React.FC<PipelineOverviewProps> = ({
           <span className="font-semibold text-text-primary">
             $
             {Object.values(data)
-              .reduce((sum, stage) => sum + stage.value, 0)
+              .reduce((sum, stage) => sum + (stage.value || 0), 0)
               .toLocaleString()}
           </span>
         </div>

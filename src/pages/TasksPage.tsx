@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Button,
   Card,
@@ -15,19 +16,13 @@ import {
   useDisclosure,
   Chip,
   Textarea,
-  DatePicker,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
   Spinner,
-  Badge,
+  Avatar,
 } from "@heroui/react";
 import {
   PlusIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
-  EllipsisVerticalIcon,
   CalendarIcon,
   CheckIcon,
   ClockIcon,
@@ -39,7 +34,6 @@ import { DealService } from "../services/dealService";
 import type {
   Task,
   CreateTaskInput,
-  UpdateTaskInput,
   TaskFilters,
   Deal,
   TaskStatus,
@@ -54,33 +48,21 @@ interface TaskFormData {
 }
 
 const TasksPage: React.FC = () => {
+  const navigate = useNavigate();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [filters, setFilters] = useState<TaskFilters>({});
   const [showFilters, setShowFilters] = useState(false);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const {
-    isOpen: isEditOpen,
-    onOpen: onEditOpen,
-    onClose: onEditClose,
-  } = useDisclosure();
 
   const {
     control,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<TaskFormData>();
-
-  const {
-    control: editControl,
-    handleSubmit: handleEditSubmit,
-    reset: resetEdit,
-    formState: { errors: editErrors },
   } = useForm<TaskFormData>();
 
   useEffect(() => {
@@ -131,63 +113,6 @@ const TasksPage: React.FC = () => {
     }
   };
 
-  const onEditSubmit = async (data: TaskFormData) => {
-    if (!selectedTask) return;
-
-    try {
-      setSubmitting(true);
-      const taskData: UpdateTaskInput = {
-        title: data.title,
-        description: data.description,
-        deal_id: data.deal_id || undefined,
-        due_date: data.due_date || undefined,
-        status: (data.status as any) || selectedTask.status,
-      };
-
-      await TaskService.updateTask(selectedTask.id, taskData);
-      await loadTasks();
-      resetEdit();
-      onEditClose();
-      setSelectedTask(null);
-    } catch (error) {
-      console.error("Failed to update task:", error);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleEdit = (task: Task) => {
-    setSelectedTask(task);
-    resetEdit({
-      title: task.title,
-      description: task.description || "",
-      deal_id: task.deal_id || "",
-      due_date: task.due_date || "",
-      status: task.status,
-    });
-    onEditOpen();
-  };
-
-  const handleDelete = async (taskId: string) => {
-    if (window.confirm("Are you sure you want to delete this task?")) {
-      try {
-        await TaskService.deleteTask(taskId);
-        await loadTasks();
-      } catch (error) {
-        console.error("Failed to delete task:", error);
-      }
-    }
-  };
-
-  const handleStatusChange = async (taskId: string, newStatus: string) => {
-    try {
-      await TaskService.updateTaskStatus(taskId, newStatus);
-      await loadTasks();
-    } catch (error) {
-      console.error("Failed to update task status:", error);
-    }
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
@@ -217,6 +142,14 @@ const TasksPage: React.FC = () => {
     return new Date(task.due_date) < new Date();
   };
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const handleTaskClick = (taskId: string) => {
+    navigate(`/tasks/${taskId}`);
+  };
+
   const filteredTasks = tasks.filter((task) => {
     // Update overdue status
     if (isOverdue(task) && task.status === "pending") {
@@ -236,7 +169,7 @@ const TasksPage: React.FC = () => {
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -400,116 +333,92 @@ const TasksPage: React.FC = () => {
         </CardBody>
       </Card>
 
-      {/* Tasks List */}
+      {/* Tasks Grid */}
       {loading ? (
         <div className="flex justify-center py-12">
           <Spinner size="lg" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTasks.map((task) => (
-            <Card key={task.id} className="hover:shadow-md transition-shadow">
+            <Card
+              key={task.id}
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              isPressable
+              onPress={() => handleTaskClick(task.id)}
+            >
               <CardBody className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <h3 className="font-semibold text-gray-900 dark:text-white">
-                        {task.title}
-                      </h3>
-                      <Chip
-                        color={getStatusColor(task.status)}
-                        variant="flat"
-                        size="sm"
-                        startContent={getStatusIcon(task.status)}
-                      >
-                        {task.status}
-                      </Chip>
-                      {task.due_date && (
-                        <Chip variant="bordered" size="sm">
-                          Due: {new Date(task.due_date).toLocaleDateString()}
-                        </Chip>
-                      )}
-                    </div>
-
-                    {task.description && (
-                      <p className="text-gray-600 dark:text-gray-400 mb-3">
-                        {task.description}
-                      </p>
-                    )}
-
-                    {task.deal && (
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          content={task.deal.stage}
-                          color="primary"
-                          variant="flat"
-                        >
-                          <span className="text-sm text-gray-500 dark:text-gray-400">
-                            Deal: {task.deal.title}
-                          </span>
-                        </Badge>
-                      </div>
-                    )}
+                <div className="flex items-start gap-3 mb-4">
+                  <Avatar
+                    icon={getStatusIcon(task.status)}
+                    className={`bg-${getStatusColor(
+                      task.status
+                    )}-100 text-${getStatusColor(task.status)}`}
+                    size="sm"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+                      {task.title}
+                    </h3>
+                    <Chip
+                      color={getStatusColor(task.status)}
+                      variant="flat"
+                      size="sm"
+                      startContent={getStatusIcon(task.status)}
+                      className="mt-1"
+                    >
+                      {task.status}
+                    </Chip>
                   </div>
-
-                  <Dropdown>
-                    <DropdownTrigger>
-                      <Button isIconOnly variant="light" size="sm">
-                        <EllipsisVerticalIcon className="w-4 h-4" />
-                      </Button>
-                    </DropdownTrigger>
-                    <DropdownMenu>
-                      <DropdownItem key="edit" onPress={() => handleEdit(task)}>
-                        Edit
-                      </DropdownItem>
-                      {task.status === "pending" && (
-                        <DropdownItem
-                          key="complete"
-                          onPress={() =>
-                            handleStatusChange(task.id, "completed")
-                          }
-                        >
-                          Mark Complete
-                        </DropdownItem>
-                      )}
-                      {task.status === "completed" && (
-                        <DropdownItem
-                          key="pending"
-                          onPress={() => handleStatusChange(task.id, "pending")}
-                        >
-                          Mark Pending
-                        </DropdownItem>
-                      )}
-                      <DropdownItem
-                        key="delete"
-                        onPress={() => handleDelete(task.id)}
-                        className="text-danger"
-                        color="danger"
-                      >
-                        Delete
-                      </DropdownItem>
-                    </DropdownMenu>
-                  </Dropdown>
                 </div>
+
+                <div className="space-y-2">
+                  {task.due_date && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <span className="font-medium">Due:</span>
+                      <span>{formatDate(task.due_date)}</span>
+                    </div>
+                  )}
+
+                  {task.deal && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <span className="font-medium">Deal:</span>
+                      <span className="truncate">{task.deal.title}</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <span className="font-medium">Created:</span>
+                    <span>{formatDate(task.created_at)}</span>
+                  </div>
+                </div>
+
+                {task.description && (
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mt-3 line-clamp-2">
+                    {task.description}
+                  </p>
+                )}
               </CardBody>
             </Card>
           ))}
 
           {filteredTasks.length === 0 && (
-            <Card>
-              <CardBody className="p-12 text-center">
-                <CalendarIcon className="w-16 h-16 text-gray-400 mx-auto mb-6" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
-                  No tasks found
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  Get started by creating your first task.
-                </p>
-                <Button color="primary" onPress={onOpen}>
-                  Add Task
-                </Button>
-              </CardBody>
-            </Card>
+            <div className="col-span-full">
+              <Card>
+                <CardBody className="p-12 text-center">
+                  <CalendarIcon className="w-16 h-16 text-gray-400 mx-auto mb-6" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                    No tasks found
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    Get started by creating your first task.
+                  </p>
+                  <Button color="primary" onPress={onOpen}>
+                    Add Task
+                  </Button>
+                </CardBody>
+              </Card>
+            </div>
           )}
         </div>
       )}
@@ -600,99 +509,6 @@ const TasksPage: React.FC = () => {
               </Button>
               <Button color="primary" type="submit" isLoading={submitting}>
                 Create Task
-              </Button>
-            </ModalFooter>
-          </form>
-        </ModalContent>
-      </Modal>
-
-      {/* Edit Task Modal */}
-      <Modal isOpen={isEditOpen} onClose={onEditClose} size="2xl">
-        <ModalContent>
-          <form onSubmit={handleEditSubmit(onEditSubmit)}>
-            <ModalHeader>Edit Task</ModalHeader>
-            <ModalBody className="space-y-4">
-              <Controller
-                name="title"
-                control={editControl}
-                rules={{ required: "Title is required" }}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    label="Title"
-                    placeholder="Enter task title"
-                    isInvalid={!!editErrors.title}
-                    errorMessage={editErrors.title?.message}
-                  />
-                )}
-              />
-
-              <Controller
-                name="description"
-                control={editControl}
-                render={({ field }) => (
-                  <Textarea
-                    {...field}
-                    label="Description"
-                    placeholder="Enter task description (optional)"
-                  />
-                )}
-              />
-
-              <Controller
-                name="deal_id"
-                control={editControl}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    label="Deal (Optional)"
-                    placeholder="Select a deal"
-                    selectedKeys={field.value ? [field.value] : []}
-                    onSelectionChange={(keys) =>
-                      field.onChange(Array.from(keys)[0] as string)
-                    }
-                  >
-                    {deals.map((deal) => (
-                      <SelectItem key={deal.id}>{deal.title}</SelectItem>
-                    ))}
-                  </Select>
-                )}
-              />
-
-              <Controller
-                name="due_date"
-                control={editControl}
-                render={({ field }) => (
-                  <Input {...field} type="date" label="Due Date (Optional)" />
-                )}
-              />
-
-              <Controller
-                name="status"
-                control={editControl}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    label="Status"
-                    placeholder="Select status"
-                    selectedKeys={field.value ? [field.value] : []}
-                    onSelectionChange={(keys) =>
-                      field.onChange(Array.from(keys)[0] as string)
-                    }
-                  >
-                    <SelectItem key="pending">Pending</SelectItem>
-                    <SelectItem key="completed">Completed</SelectItem>
-                    <SelectItem key="overdue">Overdue</SelectItem>
-                  </Select>
-                )}
-              />
-            </ModalBody>
-            <ModalFooter>
-              <Button variant="light" onPress={onEditClose}>
-                Cancel
-              </Button>
-              <Button color="primary" type="submit" isLoading={submitting}>
-                Update Task
               </Button>
             </ModalFooter>
           </form>

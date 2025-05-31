@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Button,
   Card,
@@ -14,19 +15,13 @@ import {
   ModalFooter,
   useDisclosure,
   Chip,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
   Spinner,
-  Badge,
   Progress,
 } from "@heroui/react";
 import {
   PlusIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
-  EllipsisVerticalIcon,
   CurrencyDollarIcon,
   ShoppingCartIcon,
   CheckCircleIcon,
@@ -41,7 +36,6 @@ import { DealService } from "../services/dealService";
 import type {
   PurchaseHistory,
   CreatePurchaseHistoryInput,
-  UpdatePurchaseHistoryInput,
   PurchaseHistoryFilters,
   Contact,
   Deal,
@@ -58,13 +52,12 @@ interface PurchaseFormData {
 }
 
 const PurchaseHistoryPage: React.FC = () => {
+  const navigate = useNavigate();
   const [purchases, setPurchases] = useState<PurchaseHistory[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [selectedPurchase, setSelectedPurchase] =
-    useState<PurchaseHistory | null>(null);
   const [filters, setFilters] = useState<PurchaseHistoryFilters>({});
   const [showFilters, setShowFilters] = useState(false);
   const [revenueStats, setRevenueStats] = useState({
@@ -77,11 +70,6 @@ const PurchaseHistoryPage: React.FC = () => {
   });
 
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const {
-    isOpen: isEditOpen,
-    onOpen: onEditOpen,
-    onClose: onEditClose,
-  } = useDisclosure();
 
   const {
     control,
@@ -91,16 +79,7 @@ const PurchaseHistoryPage: React.FC = () => {
     formState: { errors },
   } = useForm<PurchaseFormData>();
 
-  const {
-    control: editControl,
-    handleSubmit: handleEditSubmit,
-    reset: resetEdit,
-    watch: watchEdit,
-    formState: { errors: editErrors },
-  } = useForm<PurchaseFormData>();
-
   const selectedContactId = watch("contact_id");
-  const selectedEditContactId = watchEdit("contact_id");
 
   useEffect(() => {
     loadPurchases();
@@ -172,63 +151,6 @@ const PurchaseHistoryPage: React.FC = () => {
     }
   };
 
-  const onEditSubmit = async (data: PurchaseFormData) => {
-    if (!selectedPurchase) return;
-
-    try {
-      setSubmitting(true);
-      const purchaseData: UpdatePurchaseHistoryInput = {
-        contact_id: data.contact_id,
-        deal_id: data.deal_id || undefined,
-        date: data.date,
-        amount: data.amount,
-        product_service: data.product_service,
-        status: data.status,
-      };
-
-      await PurchaseHistoryService.updatePurchaseHistory(
-        selectedPurchase.id,
-        purchaseData
-      );
-      await loadPurchases();
-      await loadRevenueStats();
-      resetEdit();
-      onEditClose();
-      setSelectedPurchase(null);
-    } catch (error) {
-      console.error("Failed to update purchase record:", error);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleEdit = (purchase: PurchaseHistory) => {
-    setSelectedPurchase(purchase);
-    resetEdit({
-      contact_id: purchase.contact_id,
-      deal_id: purchase.deal_id || "",
-      date: purchase.date,
-      amount: purchase.amount,
-      product_service: purchase.product_service,
-      status: purchase.status,
-    });
-    onEditOpen();
-  };
-
-  const handleDelete = async (purchaseId: string) => {
-    if (
-      window.confirm("Are you sure you want to delete this purchase record?")
-    ) {
-      try {
-        await PurchaseHistoryService.deletePurchaseHistory(purchaseId);
-        await loadPurchases();
-        await loadRevenueStats();
-      } catch (error) {
-        console.error("Failed to delete purchase record:", error);
-      }
-    }
-  };
-
   const getStatusIcon = (status: PurchaseStatus) => {
     switch (status) {
       case "completed":
@@ -236,8 +158,6 @@ const PurchaseHistoryPage: React.FC = () => {
       case "pending":
         return <ClockIcon className="w-4 h-4" />;
       case "refunded":
-        return <ArrowPathIcon className="w-4 h-4" />;
-      case "cancelled":
         return <XCircleIcon className="w-4 h-4" />;
       default:
         return <ShoppingCartIcon className="w-4 h-4" />;
@@ -251,8 +171,6 @@ const PurchaseHistoryPage: React.FC = () => {
       case "pending":
         return "warning";
       case "refunded":
-        return "secondary";
-      case "cancelled":
         return "danger";
       default:
         return "default";
@@ -274,18 +192,12 @@ const PurchaseHistoryPage: React.FC = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  const purchasesByStatus = purchases.reduce((acc, purchase) => {
-    acc[purchase.status] = (acc[purchase.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const completionRate =
-    revenueStats.purchaseCount > 0
-      ? ((purchasesByStatus.completed || 0) / revenueStats.purchaseCount) * 100
-      : 0;
+  const handlePurchaseClick = (purchaseId: string) => {
+    navigate(`/purchase-history/${purchaseId}`);
+  };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -305,89 +217,22 @@ const PurchaseHistoryPage: React.FC = () => {
         </Button>
       </div>
 
-      {/* Revenue Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardBody className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Total Revenue
-                </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {formatCurrency(revenueStats.totalRevenue)}
-                </p>
-              </div>
-              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                <CurrencyDollarIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Total Revenue
+              </span>
+              <CurrencyDollarIcon className="w-5 h-5 text-primary" />
             </div>
+            <p className="text-xl font-bold text-primary">
+              {formatCurrency(revenueStats.totalRevenue)}
+            </p>
           </CardBody>
         </Card>
 
-        <Card>
-          <CardBody className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  This Month
-                </p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  {formatCurrency(revenueStats.thisMonthRevenue)}
-                </p>
-              </div>
-              <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-                <CurrencyDollarIcon className="w-6 h-6 text-green-600 dark:text-green-400" />
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardBody className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Total Purchases
-                </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {revenueStats.purchaseCount}
-                </p>
-              </div>
-              <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                <ShoppingCartIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardBody className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Completion Rate
-                </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {completionRate.toFixed(1)}%
-                </p>
-              </div>
-              <div className="p-2 bg-orange-100 dark:bg-orange-900 rounded-lg">
-                <CheckCircleIcon className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-              </div>
-            </div>
-            <Progress
-              value={completionRate}
-              className="mt-2"
-              color="success"
-              size="sm"
-            />
-          </CardBody>
-        </Card>
-      </div>
-
-      {/* Revenue Breakdown */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardBody className="p-6">
             <div className="flex items-center justify-between mb-2">
@@ -469,7 +314,6 @@ const PurchaseHistoryPage: React.FC = () => {
                 <SelectItem key="completed">Completed</SelectItem>
                 <SelectItem key="pending">Pending</SelectItem>
                 <SelectItem key="refunded">Refunded</SelectItem>
-                <SelectItem key="cancelled">Cancelled</SelectItem>
               </Select>
 
               <Select
@@ -510,99 +354,85 @@ const PurchaseHistoryPage: React.FC = () => {
         </CardBody>
       </Card>
 
-      {/* Purchase History List */}
+      {/* Purchase History Grid */}
       {loading ? (
         <div className="flex justify-center py-12">
           <Spinner size="lg" />
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {purchases.map((purchase) => (
             <Card
               key={purchase.id}
-              className="hover:shadow-md transition-shadow"
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              isPressable
+              onPress={() => handlePurchaseClick(purchase.id)}
             >
               <CardBody className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <h3 className="font-semibold text-gray-900 dark:text-white">
-                        {purchase.product_service}
-                      </h3>
-                      <Chip
-                        color={getStatusColor(purchase.status)}
-                        variant="flat"
-                        size="sm"
-                        startContent={getStatusIcon(purchase.status)}
-                      >
-                        {purchase.status}
-                      </Chip>
-                      <Chip variant="bordered" size="sm" color="success">
-                        {formatCurrency(purchase.amount)}
-                      </Chip>
-                    </div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-2 bg-primary-100 dark:bg-primary-900 rounded-lg">
+                    <ShoppingCartIcon className="w-5 h-5 text-primary" />
+                  </div>
+                  <Chip
+                    color={getStatusColor(purchase.status)}
+                    variant="flat"
+                    size="sm"
+                    startContent={getStatusIcon(purchase.status)}
+                  >
+                    {purchase.status}
+                  </Chip>
+                </div>
 
-                    <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                      <span>
-                        Contact: {purchase.contact?.name} (
-                        {purchase.contact?.email})
-                      </span>
-                      {purchase.deal && (
-                        <Badge
-                          content={purchase.deal.stage}
-                          color="primary"
-                          variant="flat"
-                        >
-                          <span>Deal: {purchase.deal.title}</span>
-                        </Badge>
-                      )}
-                      <span>Date: {formatDate(purchase.date)}</span>
-                    </div>
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+                      {purchase.product_service}
+                    </h3>
+                    <p className="text-2xl font-bold text-success mt-1">
+                      {formatCurrency(purchase.amount)}
+                    </p>
                   </div>
 
-                  <Dropdown>
-                    <DropdownTrigger>
-                      <Button isIconOnly variant="light" size="sm">
-                        <EllipsisVerticalIcon className="w-4 h-4" />
-                      </Button>
-                    </DropdownTrigger>
-                    <DropdownMenu>
-                      <DropdownItem
-                        key="edit"
-                        onPress={() => handleEdit(purchase)}
-                      >
-                        Edit
-                      </DropdownItem>
-                      <DropdownItem
-                        key="delete"
-                        onPress={() => handleDelete(purchase.id)}
-                        className="text-danger"
-                        color="danger"
-                      >
-                        Delete
-                      </DropdownItem>
-                    </DropdownMenu>
-                  </Dropdown>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <span className="font-medium">Customer:</span>
+                      <span className="truncate">{purchase.contact?.name}</span>
+                    </div>
+
+                    {purchase.deal && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <span className="font-medium">Deal:</span>
+                        <span className="truncate">{purchase.deal.title}</span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <span className="font-medium">Date:</span>
+                      <span>{formatDate(purchase.date)}</span>
+                    </div>
+                  </div>
                 </div>
               </CardBody>
             </Card>
           ))}
 
           {purchases.length === 0 && (
-            <Card>
-              <CardBody className="p-12 text-center">
-                <ShoppingCartIcon className="w-16 h-16 text-gray-400 mx-auto mb-6" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
-                  No purchase history found
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  Start tracking customer purchases to analyze revenue.
-                </p>
-                <Button color="primary" onPress={onOpen}>
-                  Add Purchase
-                </Button>
-              </CardBody>
-            </Card>
+            <div className="col-span-full">
+              <Card>
+                <CardBody className="p-12 text-center">
+                  <ShoppingCartIcon className="w-16 h-16 text-gray-400 mx-auto mb-6" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                    No purchase history found
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    Start tracking customer purchases to analyze revenue.
+                  </p>
+                  <Button color="primary" onPress={onOpen}>
+                    Add Purchase
+                  </Button>
+                </CardBody>
+              </Card>
+            </div>
           )}
         </div>
       )}
@@ -639,6 +469,26 @@ const PurchaseHistoryPage: React.FC = () => {
               />
 
               <Controller
+                name="deal_id"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    label="Deal (Optional)"
+                    placeholder="Select a deal"
+                    selectedKeys={field.value ? [field.value] : []}
+                    onSelectionChange={(keys) =>
+                      field.onChange(Array.from(keys)[0] as string)
+                    }
+                  >
+                    {getContactDeals(selectedContactId).map((deal) => (
+                      <SelectItem key={deal.id}>{deal.title}</SelectItem>
+                    ))}
+                  </Select>
+                )}
+              />
+
+              <Controller
                 name="product_service"
                 control={control}
                 rules={{ required: "Product/Service is required" }}
@@ -666,14 +516,11 @@ const PurchaseHistoryPage: React.FC = () => {
                     type="number"
                     step="0.01"
                     label="Amount"
-                    placeholder="Enter purchase amount"
+                    placeholder="0.00"
                     startContent="$"
                     isInvalid={!!errors.amount}
                     errorMessage={errors.amount?.message}
-                    value={field.value?.toString() || ""}
-                    onChange={(e) =>
-                      field.onChange(parseFloat(e.target.value) || 0)
-                    }
+                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
                   />
                 )}
               />
@@ -689,27 +536,8 @@ const PurchaseHistoryPage: React.FC = () => {
                     label="Purchase Date"
                     isInvalid={!!errors.date}
                     errorMessage={errors.date?.message}
+                    defaultValue={new Date().toISOString().split("T")[0]}
                   />
-                )}
-              />
-
-              <Controller
-                name="deal_id"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    label="Deal (Optional)"
-                    placeholder="Select a deal"
-                    selectedKeys={field.value ? [field.value] : []}
-                    onSelectionChange={(keys) =>
-                      field.onChange(Array.from(keys)[0] as string)
-                    }
-                  >
-                    {getContactDeals(selectedContactId).map((deal) => (
-                      <SelectItem key={deal.id}>{deal.title}</SelectItem>
-                    ))}
-                  </Select>
                 )}
               />
 
@@ -724,7 +552,7 @@ const PurchaseHistoryPage: React.FC = () => {
                     placeholder="Select status"
                     isInvalid={!!errors.status}
                     errorMessage={errors.status?.message}
-                    selectedKeys={field.value ? [field.value] : ["completed"]}
+                    selectedKeys={field.value ? [field.value] : []}
                     onSelectionChange={(keys) =>
                       field.onChange(Array.from(keys)[0] as PurchaseStatus)
                     }
@@ -732,7 +560,6 @@ const PurchaseHistoryPage: React.FC = () => {
                     <SelectItem key="completed">Completed</SelectItem>
                     <SelectItem key="pending">Pending</SelectItem>
                     <SelectItem key="refunded">Refunded</SelectItem>
-                    <SelectItem key="cancelled">Cancelled</SelectItem>
                   </Select>
                 )}
               />
@@ -743,148 +570,6 @@ const PurchaseHistoryPage: React.FC = () => {
               </Button>
               <Button color="primary" type="submit" isLoading={submitting}>
                 Add Purchase
-              </Button>
-            </ModalFooter>
-          </form>
-        </ModalContent>
-      </Modal>
-
-      {/* Edit Purchase Modal */}
-      <Modal isOpen={isEditOpen} onClose={onEditClose} size="2xl">
-        <ModalContent>
-          <form onSubmit={handleEditSubmit(onEditSubmit)}>
-            <ModalHeader>Edit Purchase</ModalHeader>
-            <ModalBody className="space-y-4">
-              <Controller
-                name="contact_id"
-                control={editControl}
-                rules={{ required: "Contact is required" }}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    label="Contact"
-                    placeholder="Select a contact"
-                    isInvalid={!!editErrors.contact_id}
-                    errorMessage={editErrors.contact_id?.message}
-                    selectedKeys={field.value ? [field.value] : []}
-                    onSelectionChange={(keys) =>
-                      field.onChange(Array.from(keys)[0] as string)
-                    }
-                  >
-                    {contacts.map((contact) => (
-                      <SelectItem key={contact.id}>
-                        {contact.name} ({contact.email})
-                      </SelectItem>
-                    ))}
-                  </Select>
-                )}
-              />
-
-              <Controller
-                name="product_service"
-                control={editControl}
-                rules={{ required: "Product/Service is required" }}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    label="Product/Service"
-                    placeholder="Enter product or service name"
-                    isInvalid={!!editErrors.product_service}
-                    errorMessage={editErrors.product_service?.message}
-                  />
-                )}
-              />
-
-              <Controller
-                name="amount"
-                control={editControl}
-                rules={{
-                  required: "Amount is required",
-                  min: { value: 0, message: "Amount must be positive" },
-                }}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    type="number"
-                    step="0.01"
-                    label="Amount"
-                    placeholder="Enter purchase amount"
-                    startContent="$"
-                    isInvalid={!!editErrors.amount}
-                    errorMessage={editErrors.amount?.message}
-                    value={field.value?.toString() || ""}
-                    onChange={(e) =>
-                      field.onChange(parseFloat(e.target.value) || 0)
-                    }
-                  />
-                )}
-              />
-
-              <Controller
-                name="date"
-                control={editControl}
-                rules={{ required: "Date is required" }}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    type="date"
-                    label="Purchase Date"
-                    isInvalid={!!editErrors.date}
-                    errorMessage={editErrors.date?.message}
-                  />
-                )}
-              />
-
-              <Controller
-                name="deal_id"
-                control={editControl}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    label="Deal (Optional)"
-                    placeholder="Select a deal"
-                    selectedKeys={field.value ? [field.value] : []}
-                    onSelectionChange={(keys) =>
-                      field.onChange(Array.from(keys)[0] as string)
-                    }
-                  >
-                    {getContactDeals(selectedEditContactId).map((deal) => (
-                      <SelectItem key={deal.id}>{deal.title}</SelectItem>
-                    ))}
-                  </Select>
-                )}
-              />
-
-              <Controller
-                name="status"
-                control={editControl}
-                rules={{ required: "Status is required" }}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    label="Status"
-                    placeholder="Select status"
-                    isInvalid={!!editErrors.status}
-                    errorMessage={editErrors.status?.message}
-                    selectedKeys={field.value ? [field.value] : []}
-                    onSelectionChange={(keys) =>
-                      field.onChange(Array.from(keys)[0] as PurchaseStatus)
-                    }
-                  >
-                    <SelectItem key="completed">Completed</SelectItem>
-                    <SelectItem key="pending">Pending</SelectItem>
-                    <SelectItem key="refunded">Refunded</SelectItem>
-                    <SelectItem key="cancelled">Cancelled</SelectItem>
-                  </Select>
-                )}
-              />
-            </ModalBody>
-            <ModalFooter>
-              <Button variant="light" onPress={onEditClose}>
-                Cancel
-              </Button>
-              <Button color="primary" type="submit" isLoading={submitting}>
-                Update Purchase
               </Button>
             </ModalFooter>
           </form>
