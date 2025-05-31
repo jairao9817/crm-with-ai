@@ -74,6 +74,113 @@ export interface UpdateDealInput {
   probability_percentage?: number;
 }
 
+// Task types
+export type TaskStatus = "pending" | "completed" | "overdue";
+
+export interface Task {
+  id: string;
+  deal_id?: string;
+  title: string;
+  description?: string;
+  due_date?: string;
+  status: TaskStatus;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  // Joined data
+  deal?: Deal;
+}
+
+export interface CreateTaskInput {
+  deal_id?: string;
+  title: string;
+  description?: string;
+  due_date?: string;
+  status?: TaskStatus;
+}
+
+export interface UpdateTaskInput {
+  deal_id?: string;
+  title?: string;
+  description?: string;
+  due_date?: string;
+  status?: TaskStatus;
+}
+
+// Communication types
+export type CommunicationType = "phone_call" | "email" | "meeting" | "note";
+
+export interface Communication {
+  id: string;
+  contact_id: string;
+  deal_id?: string;
+  type: CommunicationType;
+  subject?: string;
+  content?: string;
+  communication_date: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  // Joined data
+  contact?: Contact;
+  deal?: Deal;
+}
+
+export interface CreateCommunicationInput {
+  contact_id: string;
+  deal_id?: string;
+  type: CommunicationType;
+  subject?: string;
+  content?: string;
+  communication_date?: string;
+}
+
+export interface UpdateCommunicationInput {
+  contact_id?: string;
+  deal_id?: string;
+  type?: CommunicationType;
+  subject?: string;
+  content?: string;
+  communication_date?: string;
+}
+
+// Purchase History types
+export type PurchaseStatus = "completed" | "pending" | "refunded" | "cancelled";
+
+export interface PurchaseHistory {
+  id: string;
+  contact_id: string;
+  deal_id?: string;
+  date: string;
+  amount: number;
+  product_service: string;
+  status: PurchaseStatus;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  // Joined data
+  contact?: Contact;
+  deal?: Deal;
+}
+
+export interface CreatePurchaseHistoryInput {
+  contact_id: string;
+  deal_id?: string;
+  date: string;
+  amount: number;
+  product_service: string;
+  status?: PurchaseStatus;
+}
+
+export interface UpdatePurchaseHistoryInput {
+  contact_id?: string;
+  deal_id?: string;
+  date?: string;
+  amount?: number;
+  product_service?: string;
+  status?: PurchaseStatus;
+}
+
 // UI types
 export interface ContactFilters {
   search?: string;
@@ -83,5 +190,30 @@ export interface ContactFilters {
 export interface DealFilters {
   stage?: DealStage;
   contact_id?: string;
+  search?: string;
+}
+
+export interface TaskFilters {
+  status?: TaskStatus;
+  deal_id?: string;
+  due_date?: string;
+  search?: string;
+}
+
+export interface CommunicationFilters {
+  type?: CommunicationType;
+  contact_id?: string;
+  deal_id?: string;
+  date_from?: string;
+  date_to?: string;
+  search?: string;
+}
+
+export interface PurchaseHistoryFilters {
+  status?: PurchaseStatus;
+  contact_id?: string;
+  deal_id?: string;
+  date_from?: string;
+  date_to?: string;
   search?: string;
 }

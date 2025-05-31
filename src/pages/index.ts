@@ -5,3 +5,8 @@ export { default as ResetPasswordPage } from "./ResetPasswordPage";
 export { default as HomePage } from "./HomePage";
 export { default as ProfilePage } from "./ProfilePage";
 export { default as SettingsPage } from "./SettingsPage";
+export { default as ContactsPage } from "./ContactsPage";
+export { default as DealsPage } from "./DealsPage";
+export { default as TasksPage } from "./TasksPage";
+export { default as CommunicationsPage } from "./CommunicationsPage";
+export { default as PurchaseHistoryPage } from "./PurchaseHistoryPage";

@@ -19,6 +19,9 @@ import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import ContactsPage from "./pages/ContactsPage";
 import DealsPage from "./pages/DealsPage";
+import TasksPage from "./pages/TasksPage";
+import CommunicationsPage from "./pages/CommunicationsPage";
+import PurchaseHistoryPage from "./pages/PurchaseHistoryPage";
 import "./App.css";
 
 const AppRouter: React.FC = () => {
@@ -73,6 +76,36 @@ const AppRouter: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <DealsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tasks"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <TasksPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/communications"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <CommunicationsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/purchase-history"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <PurchaseHistoryPage />
             </Layout>
           </ProtectedRoute>
         }

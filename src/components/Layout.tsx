@@ -34,7 +34,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             lg:ml-64 ${sidebarCollapsed ? "lg:ml-16" : "lg:ml-64"}
           `}
         >
-          <main className="min-h-[calc(100vh-4rem)]">{children}</main>
+          <main className="min-h-[calc(100vh-4rem)] p-4 sm:p-6 lg:p-8">
+            {children}
+          </main>
         </div>
       </div>
     </div>

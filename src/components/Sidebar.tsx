@@ -4,6 +4,9 @@ import {
   HomeIcon,
   UsersIcon,
   BriefcaseIcon,
+  CheckCircleIcon,
+  ChatBubbleLeftRightIcon,
+  ShoppingCartIcon,
   XMarkIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -12,6 +15,9 @@ import {
   HomeIcon as HomeIconSolid,
   UsersIcon as UsersIconSolid,
   BriefcaseIcon as BriefcaseIconSolid,
+  CheckCircleIcon as CheckCircleIconSolid,
+  ChatBubbleLeftRightIcon as ChatBubbleLeftRightIconSolid,
+  ShoppingCartIcon as ShoppingCartIconSolid,
 } from "@heroicons/react/24/solid";
 
 interface NavigationItem {
@@ -39,6 +45,24 @@ const navigation: NavigationItem[] = [
     href: "/deals",
     icon: BriefcaseIcon,
     iconSolid: BriefcaseIconSolid,
+  },
+  {
+    name: "Tasks",
+    href: "/tasks",
+    icon: CheckCircleIcon,
+    iconSolid: CheckCircleIconSolid,
+  },
+  {
+    name: "Communications",
+    href: "/communications",
+    icon: ChatBubbleLeftRightIcon,
+    iconSolid: ChatBubbleLeftRightIconSolid,
+  },
+  {
+    name: "Purchase History",
+    href: "/purchase-history",
+    icon: ShoppingCartIcon,
+    iconSolid: ShoppingCartIconSolid,
   },
 ];
 
