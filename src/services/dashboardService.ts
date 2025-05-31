@@ -207,6 +207,8 @@ export class DashboardService {
     try {
       const sixMonthsAgo = new Date();
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      sixMonthsAgo.setDate(1); // Start from the first day of the month
+      sixMonthsAgo.setHours(0, 0, 0, 0);
 
       const { data, error } = await supabase
         .from("purchase_history")
@@ -216,6 +218,7 @@ export class DashboardService {
         .order("date", { ascending: true });
 
       if (error) {
+        console.error("Supabase error in getRevenueTrends:", error);
         throw new Error(`Failed to fetch revenue trends: ${error.message}`);
       }
 
@@ -228,18 +231,36 @@ export class DashboardService {
           date.getMonth() + 1
         ).padStart(2, "0")}`;
         monthlyRevenue[monthKey] =
-          (monthlyRevenue[monthKey] || 0) + purchase.amount;
+          (monthlyRevenue[monthKey] || 0) + (purchase.amount || 0);
       });
 
-      // Generate last 6 months array
+      // Generate last 6 months array - use a more reliable approach
       const trends = [];
+
+      // Start from current month and go back 5 months
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth(); // 0-based (0 = January)
+
       for (let i = 5; i >= 0; i--) {
-        const date = new Date();
-        date.setMonth(date.getMonth() - i);
-        const monthKey = `${date.getFullYear()}-${String(
-          date.getMonth() + 1
-        ).padStart(2, "0")}`;
-        const monthName = date.toLocaleDateString("en-US", {
+        // Calculate year and month for i months ago
+        let targetYear = currentYear;
+        let targetMonth = currentMonth - i;
+
+        // Handle year boundary crossing
+        while (targetMonth < 0) {
+          targetMonth += 12;
+          targetYear -= 1;
+        }
+
+        const monthKey = `${targetYear}-${String(targetMonth + 1).padStart(
+          2,
+          "0"
+        )}`;
+
+        // Create a date object for formatting
+        const dateForFormatting = new Date(targetYear, targetMonth, 1);
+        const monthName = dateForFormatting.toLocaleDateString("en-US", {
           month: "short",
           year: "numeric",
         });
@@ -250,10 +271,37 @@ export class DashboardService {
         });
       }
 
+      console.log("Revenue trends data:", trends);
       return trends;
     } catch (error) {
       console.error("Error fetching revenue trends:", error);
-      throw new Error("Failed to fetch revenue trends");
+      // Return fallback data with proper month sequence
+      const trends = [];
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+
+      for (let i = 5; i >= 0; i--) {
+        let targetYear = currentYear;
+        let targetMonth = currentMonth - i;
+
+        while (targetMonth < 0) {
+          targetMonth += 12;
+          targetYear -= 1;
+        }
+
+        const dateForFormatting = new Date(targetYear, targetMonth, 1);
+        const monthName = dateForFormatting.toLocaleDateString("en-US", {
+          month: "short",
+          year: "numeric",
+        });
+
+        trends.push({
+          month: monthName,
+          revenue: 0,
+        });
+      }
+      return trends;
     }
   }
 }

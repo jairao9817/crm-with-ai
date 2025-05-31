@@ -7,6 +7,7 @@ export { default as ResetPasswordPage } from "./ResetPasswordPage";
 // Main Application Pages
 export { default as HomePage } from "./HomePage";
 export { default as DashboardPage } from "./DashboardPage";
+export { default as ActivityPage } from "./ActivityPage";
 export { default as ContactsPage } from "./ContactsPage";
 export { default as ContactDetailPage } from "./ContactDetailPage";
 export { default as DealsPage } from "./DealsPage";

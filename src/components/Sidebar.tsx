@@ -7,6 +7,7 @@ import {
   CheckCircleIcon,
   ChatBubbleLeftRightIcon,
   ShoppingCartIcon,
+  ClockIcon,
   XMarkIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -18,6 +19,7 @@ import {
   CheckCircleIcon as CheckCircleIconSolid,
   ChatBubbleLeftRightIcon as ChatBubbleLeftRightIconSolid,
   ShoppingCartIcon as ShoppingCartIconSolid,
+  ClockIcon as ClockIconSolid,
 } from "@heroicons/react/24/solid";
 
 interface NavigationItem {
@@ -33,6 +35,12 @@ const navigation: NavigationItem[] = [
     href: "/dashboard",
     icon: HomeIcon,
     iconSolid: HomeIconSolid,
+  },
+  {
+    name: "Activity",
+    href: "/activity",
+    icon: ClockIcon,
+    iconSolid: ClockIconSolid,
   },
   {
     name: "Contacts",

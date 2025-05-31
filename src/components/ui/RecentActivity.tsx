@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   UserIcon,
   BriefcaseIcon,
@@ -124,9 +125,12 @@ const RecentActivity: React.FC<RecentActivityProps> = ({
 
       {activities.length > 0 && (
         <div className="mt-6 pt-4 border-t border-border">
-          <button className="text-sm text-primary-600 hover:text-primary-700 font-medium">
+          <Link
+            to="/activity"
+            className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+          >
             View all activity →
-          </button>
+          </Link>
         </div>
       )}
     </div>
