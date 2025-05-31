@@ -1,0 +1,410 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# CRM Application - Product Requirements Document
+
+## 1. Project Overview
+
+### 1.1 Product Vision
+A comprehensive Customer Relationship Management (CRM) web application designed to help businesses manage contacts, deals, and customer data efficiently. The system will provide multi-user access with role-based permissions, comprehensive reporting, and streamlined data management capabilities.
+
+### 1.2 Technology Stack
+- **Frontend**: React with Tailwind CSS
+- **Form Management**: React Hook Form
+- **Backend & Database**: Supabase
+- **Authentication**: Supabase Auth (Email/Password strategy)
+- **Responsive Design**: Mobile-first approach using Tailwind CSS
+
+### 1.3 Target Users
+- **Admin Users**: Full system access and user management
+- **Sales Users**: Contact and deal management with restricted access
+
+## 2. User Roles & Permissions
+
+### 2.1 Admin Role
+**Permissions:**
+- Create, edit, delete all contacts and deals
+- View all deals across all users
+- Access all reports and analytics
+- Manage user accounts and permissions
+- Import/export data
+- Full system configuration access
+
+### 2.2 Sales Role
+**Permissions:**
+- Create, edit, delete contacts
+- Create, edit, delete own deals only
+- View own deals and associated contacts
+- Access personal performance reports
+- Import/export own data
+- Limited system access
+
+## 3. Core Features & Functionality
+
+### 3.1 Contact Management
+
+#### 3.1.1 Contact Information Schema
+```
+Contact Entity:
+- id (UUID, Primary Key)
+- name (String, Required)
+- email (String, Required, Unique)
+- phone (String)
+- company (String)
+- job_title (String)
+- preferences (JSON/Text)
+- created_at (Timestamp)
+- updated_at (Timestamp)
+- created_by (User ID)
+- updated_by (User ID)
+```
+
+#### 3.1.2 Contact Features
+- **CRUD Operations**: Create, Read, Update, Delete contacts
+- **Search & Filter**: Search by name, email, company, job title
+- **Individual Treatment**: Each contact treated as separate entity (no company grouping)
+- **Duplicate Detection**: System should flag potential duplicates based on email/phone
+- **Contact List View**: Modern card-based layout showing key information
+- **Contact Detail View**: Comprehensive view with all information and related deals
+
+### 3.2 Deal Management
+
+#### 3.2.1 Deal Information Schema
+```
+Deal Entity:
+- id (UUID, Primary Key)
+- title (String, Required)
+- contact_id (UUID, Foreign Key to Contact)
+- assigned_user_id (UUID, Foreign Key to User)
+- stage (Enum: 'lead', 'prospect', 'negotiation', 'closed-won', 'closed-lost')
+- monetary_value (Decimal)
+- expected_close_date (Date)
+- probability_percentage (Integer, 0-100)
+- created_at (Timestamp)
+- updated_at (Timestamp)
+- created_by (User ID)
+- updated_by (User ID)
+```
+
+#### 3.2.2 Deal Pipeline Stages
+1. **Lead**: Initial contact/inquiry
+2. **Prospect**: Qualified potential customer
+3. **Negotiation**: Active discussion/proposal stage
+4. **Closed-Won**: Successfully closed deal
+5. **Closed-Lost**: Deal lost to competitor or abandoned
+
+#### 3.2.3 Deal Features
+- **Pipeline Management**: Visual pipeline with drag-and-drop capability
+- **Deal Assignment**: Assign deals to specific users
+- **Progress Tracking**: Track stage progression with timestamps
+- **Value Tracking**: Monitor monetary value and probability
+- **Multiple Deals per Contact**: One contact can have multiple active/closed deals
+
+### 3.3 Deal-Related Tasks & Activities
+
+#### 3.3.1 Task Schema
+```
+Task Entity:
+- id (UUID, Primary Key)
+- deal_id (UUID, Foreign Key to Deal)
+- title (String, Required)
+- description (Text)
+- due_date (Date)
+- status (Enum: 'pending', 'completed', 'overdue')
+- assigned_user_id (UUID, Foreign Key to User)
+- created_at (Timestamp)
+- updated_at (Timestamp)
+```
+
+#### 3.3.2 Task Features
+- **Task Creation**: Create tasks linked to specific deals
+- **Task Assignment**: Assign tasks to users
+- **Due Date Management**: Set and track due dates
+- **Status Tracking**: Monitor task completion
+- **Task Lists**: View tasks by deal, user, or status
+
+### 3.4 Communication History
+
+#### 3.4.1 Communication Schema
+```
+Communication Entity:
+- id (UUID, Primary Key)
+- contact_id (UUID, Foreign Key to Contact)
+- deal_id (UUID, Foreign Key to Deal, Nullable)
+- type (Enum: 'phone_call', 'email', 'meeting', 'note')
+- subject (String)
+- content (Text)
+- communication_date (Timestamp)
+- user_id (UUID, Foreign Key to User)
+- created_at (Timestamp)
+- updated_at (Timestamp)
+```
+
+#### 3.4.2 Communication Features
+- **Multi-Type Tracking**: Phone calls, emails, meetings, notes
+- **Dual Linking**: Link communications to both contacts and deals
+- **User Attribution**: Track which user logged each communication
+- **Timeline View**: Chronological display of all communications
+- **Search & Filter**: Filter by type, date range, user
+
+### 3.5 Purchase History
+
+#### 3.5.1 Purchase History Schema
+```
+Purchase Entity:
+- id (UUID, Primary Key)
+- contact_id (UUID, Foreign Key to Contact)
+- deal_id (UUID, Foreign Key to Deal, Nullable)
+- date (Date, Required)
+- amount (Decimal, Required)
+- product_service (String, Required)
+- status (Enum: 'completed', 'pending', 'refunded', 'cancelled')
+- created_at (Timestamp)
+- updated_at (Timestamp)
+- created_by (User ID)
+```
+
+#### 3.5.2 Purchase Features
+- **Purchase Tracking**: Complete purchase history per contact
+- **Revenue Analysis**: Track total revenue per contact/deal
+- **Product/Service Categorization**: Categorize purchases
+- **Status Management**: Track purchase status changes
+
+## 4. User Interface & Experience
+
+### 4.1 Application Layout
+- **Navigation**: Left sidebar navigation
+- **Design Style**: Modern card-based layout
+- **Responsiveness**: Mobile-first responsive design
+- **Color Scheme**: Professional, clean design using Tailwind CSS
+
+### 4.2 Main Navigation Structure
+```
+Sidebar Navigation:
+├── Dashboard
+├── Contacts
+│   ├── All Contacts
+│   ├── Add Contact
+│   └── Import Contacts
+├── Deals
+│   ├── Pipeline View
+│   ├── All Deals
+│   ├── My Deals (Sales users)
+│   └── Add Deal
+├── Communications
+│   ├── All Communications
+│   └── Add Communication
+├── Reports & Analytics
+│   ├── Sales Pipeline
+│   ├── Conversion Rates
+│   ├── User Performance
+│   └── Revenue Forecasts
+├── Import/Export
+└── Settings (Admin only)
+    ├── User Management
+    └── System Settings
+```
+
+### 4.3 Dashboard Requirements
+- **Key Metrics Cards**: Total contacts, active deals, revenue this month, conversion rate
+- **Pipeline Overview**: Visual representation of deals by stage
+- **Recent Activities**: Latest communications and deal updates
+- **Quick Actions**: Add contact, add deal, log communication
+- **Performance Charts**: Revenue trends, deal closure rates
+- **Role-Based Content**: Different dashboard views for Admin vs Sales users
+
+## 5. Reporting & Analytics
+
+### 5.1 Required Reports
+
+#### 5.1.1 Sales Pipeline Report
+- **Visual Pipeline**: Deals by stage with monetary values
+- **Conversion Rates**: Percentage of deals moving between stages
+- **Time in Stage**: Average time deals spend in each stage
+- **Pipeline Value**: Total value of deals in each stage
+
+#### 5.1.2 Conversion Rates Report
+- **Overall Conversion**: Lead to closed-won percentage
+- **Stage Conversion**: Conversion rates between each stage
+- **User Comparison**: Conversion rates by sales user
+- **Time Period Analysis**: Conversion trends over time
+
+#### 5.1.3 User Performance Report
+- **Individual Metrics**: Deals closed, revenue generated, activities logged
+- **Comparative Analysis**: Performance ranking among users
+- **Activity Tracking**: Communication frequency and quality
+- **Goal Tracking**: Performance against targets (if set)
+
+#### 5.1.4 Revenue Forecasts Report
+- **Monthly Projections**: Expected revenue based on pipeline
+- **Quarterly Forecasts**: Longer-term revenue predictions
+- **Probability-Weighted**: Forecasts based on deal probability
+- **Historical Comparison**: Current vs previous period performance
+
+### 5.2 Report Features
+- **Visual Charts**: Bar charts, line graphs, pie charts using chart library
+- **Data Tables**: Detailed tabular data with sorting and filtering
+- **Time Period Filters**: Last 30 days, quarter, year, custom ranges
+- **Export Capability**: Export reports to PDF and Excel
+- **Real-Time Updates**: Reports update automatically with new data
+
+## 6. Data Import/Export
+
+### 6.1 Import Functionality
+
+#### 6.1.1 Supported Formats
+- **CSV**: Comma-separated values
+- **Excel**: .xlsx and .xls formats
+- **JSON**: For bulk data imports
+
+#### 6.1.2 Import Features
+- **Contact Import**: Bulk import contacts with validation
+- **Deal Import**: Import deals with contact association
+- **Data Validation**: Check for required fields and format errors
+- **Duplicate Detection**: Flag potential duplicates during import
+- **Import Preview**: Show preview before final import
+- **Error Reporting**: Detailed error messages for failed imports
+
+### 6.2 Export Functionality
+
+#### 6.2.1 Export Formats
+- **PDF**: Formatted reports and contact lists
+- **Excel**: Structured data export
+- **CSV**: Simple data export for external tools
+
+#### 6.2.2 Export Options
+- **Contact Export**: All contact information and communication history
+- **Deal Export**: Complete deal data with associated contacts
+- **Report Export**: All report data with charts and summaries
+- **Filtered Exports**: Export based on current filters/search criteria
+- **Custom Field Selection**: Choose specific fields to export
+
+## 7. Database Schema & Relationships
+
+### 7.1 Entity Relationships
+```
+Users (Supabase Auth)
+├── Has Many: Contacts (created_by)
+├── Has Many: Deals (assigned_user_id)
+├── Has Many: Communications (user_id)
+└── Has Many: Tasks (assigned_user_id)
+
+Contacts
+├── Has Many: Deals (contact_id)
+├── Has Many: Communications (contact_id)
+└── Has Many: Purchases (contact_id)
+
+Deals
+├── Belongs To: Contact (contact_id)
+├── Belongs To: User (assigned_user_id)
+├── Has Many: Communications (deal_id)
+├── Has Many: Tasks (deal_id)
+└── Has Many: Purchases (deal_id)
+
+Communications
+├── Belongs To: Contact (contact_id)
+├── Belongs To: Deal (deal_id) [Optional]
+└── Belongs To: User (user_id)
+
+Tasks
+├── Belongs To: Deal (deal_id)
+└── Belongs To: User (assigned_user_id)
+
+Purchases
+├── Belongs To: Contact (contact_id)
+└── Belongs To: Deal (deal_id) [Optional]
+```
+
+### 7.2 Database Constraints
+- **Foreign Key Constraints**: Maintain referential integrity
+- **Unique Constraints**: Email uniqueness for contacts
+- **Check Constraints**: Valid enum values for stages, statuses
+- **Not Null Constraints**: Required fields must have values
+
+## 8. Security & Access Control
+
+### 8.1 Authentication
+- **Supabase Auth**: Email/password authentication
+- **Session Management**: Secure session handling
+- **Password Requirements**: Minimum security standards
+- **Account Verification**: Email verification for new accounts
+
+### 8.2 Authorization
+- **Role-Based Access**: Admin and Sales role permissions
+- **Row-Level Security**: Users can only access their own data (Sales role)
+- **API Security**: Secure API endpoints with proper authentication
+- **Data Isolation**: Proper data separation between users
+
+## 9. Performance Requirements
+
+### 9.1 Response Times
+- **Page Load**: < 3 seconds for initial load
+- **Data Operations**: < 1 second for CRUD operations
+- **Reports**: < 5 seconds for complex reports
+- **Search**: < 1 second for search results
+
+### 9.2 Scalability
+- **User Capacity**: Support 100+ concurrent users
+- **Data Volume**: Handle 10,000+ contacts and deals
+- **Database Performance**: Optimized queries and indexing
+- **Caching**: Implement appropriate caching strategies
+
+## 10. Technical Implementation Notes
+
+### 10.1 Form Handling
+- **React Hook Form**: Use for all form validation and submission
+- **Validation Rules**: Client-side and server-side validation
+- **Error Handling**: User-friendly error messages
+- **Auto-save**: Consider auto-save for long forms
+
+### 10.2 State Management
+- **React State**: Use React hooks for local state
+- **Supabase Realtime**: Real-time updates for collaborative features
+- **Optimistic Updates**: Immediate UI updates with server sync
+
+### 10.3 UI Components
+- **Tailwind CSS**: Consistent styling across all components
+- **Reusable Components**: Create component library for consistency
+- **Accessibility**: WCAG compliance for all UI elements
+- **Loading States**: Proper loading indicators for all operations
+
+## 11. Success Criteria
+
+### 11.1 Functional Requirements
+- ✅ Complete contact management with all specified fields
+- ✅ Full deal pipeline with all stages and features
+- ✅ Comprehensive communication tracking
+- ✅ Role-based access control working properly
+- ✅ All reports generating accurate data
+- ✅ Import/export functionality working with specified formats
+
+### 11.2 Quality Requirements
+- ✅ Mobile responsive design on all screen sizes
+- ✅ Fast load times and smooth user experience
+- ✅ No critical bugs or security vulnerabilities
+- ✅ Proper error handling and user feedback
+- ✅ Data integrity maintained across all operations
+
+### 11.3 User Acceptance
+- ✅ Intuitive navigation and user interface
+- ✅ Efficient workflows for daily tasks
+- ✅ Accurate and useful reporting
+- ✅ Reliable data import/export processes
+- ✅ Proper role-based access restrictions
+
+## 12. Future Enhancements (Out of Scope)
+- Email integration with external email providers
+- Automated follow-up reminders and notifications
+- Advanced automation and workflow rules
+- Third-party tool integrations
+- Mobile native applications
+- Offline functionality
+- Advanced analytics and AI insights
+
+---
+
+**Document Version**: 1.0  
+**Last Updated**: May 31, 2025  
+**Approval Required**: Technical Lead, Product Owner

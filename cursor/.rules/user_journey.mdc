@@ -1,0 +1,171 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# CRM Application - User Journeys
+
+## 1. User Journey Overview
+This document outlines the key user journeys for both Admin and Sales users in the CRM system. Each journey represents a common workflow that users will follow to accomplish their tasks.
+
+## 2. Admin User Journeys
+
+### 2.1 Initial System Setup Journey
+1. **System Access**
+   - Log into the system using admin credentials
+   - Navigate to Settings > System Settings
+   - Configure basic system parameters (company info, branding)
+
+2. **User Management Setup**
+   - Navigate to Settings > User Management
+   - Create user accounts for team members
+   - Assign appropriate roles (Admin/Sales)
+   - Set initial permissions
+
+3. **Data Structure Setup**
+   - Configure custom fields for contacts if needed
+   - Set up deal stages and pipeline structure
+   - Define communication types and categories
+
+4. **Success Metrics**
+   - System configured according to business needs
+   - User accounts created and roles assigned
+   - Basic data structure ready for use
+
+### 2.2 Ongoing System Management Journey
+1. **Daily Monitoring**
+   - Review dashboard for system performance
+   - Check user activity logs
+   - Monitor data integrity and duplicates
+
+2. **User Support**
+   - Handle user access issues
+   - Process new user requests
+   - Update user permissions as needed
+
+3. **Data Management**
+   - Oversee data import/export processes
+   - Manage bulk updates when needed
+   - Ensure data quality and consistency
+
+4. **Success Metrics**
+   - System running smoothly
+   - User issues resolved promptly
+   - Data maintained accurately
+
+### 2.3 Reporting & Analysis Journey
+1. **Report Generation**
+   - Access Reports & Analytics section
+   - Generate system-wide performance reports
+   - Create custom reports as needed
+
+2. **Performance Analysis**
+   - Review sales team performance metrics
+   - Analyze conversion rates and pipeline health
+   - Identify trends and patterns
+
+3. **Insights Communication**
+   - Share relevant reports with stakeholders
+   - Provide actionable insights to teams
+   - Make data-driven recommendations
+
+4. **Success Metrics**
+   - Accurate reports generated
+   - Clear insights identified
+   - Effective communication of findings
+
+## 3. Sales User Journeys
+
+### 3.1 Contact Management Journey
+1. **Contact Creation**
+   - Navigate to Contacts > Add Contact
+   - Enter required contact information
+   - Add additional details and preferences
+   - Save and verify contact details
+
+2. **Contact Maintenance**
+   - Regular review of assigned contacts
+   - Update contact information as needed
+   - Add notes and communication records
+   - Track interactions and preferences
+
+3. **Contact Organization**
+   - Tag and categorize contacts
+   - Set follow-up reminders
+   - Maintain communication history
+
+4. **Success Metrics**
+   - Accurate contact records maintained
+   - Regular updates logged
+   - Effective contact organization
+
+### 3.2 Deal Pipeline Journey
+1. **Deal Creation**
+   - Navigate to Deals > Add Deal
+   - Select or create associated contact
+   - Enter deal details and value
+   - Set initial pipeline stage
+
+2. **Deal Progression**
+   - Update deal stages as they progress
+   - Log activities and communications
+   - Set tasks and reminders
+   - Update probability and value estimates
+
+3. **Deal Closure**
+   - Move deals to Closed-Won or Closed-Lost
+   - Document reason for closure
+   - Update final deal value
+   - Plan follow-up actions
+
+4. **Success Metrics**
+   - Deals properly tracked through pipeline
+   - Regular updates maintained
+   - Accurate closure documentation
+
+### 3.3 Daily Operations Journey
+1. **Morning Review**
+   - Check dashboard for overview
+   - Review tasks and reminders
+   - Plan daily activities
+
+2. **Activity Management**
+   - Log new communications
+   - Update deal statuses
+   - Complete pending tasks
+   - Schedule follow-ups
+
+3. **End of Day**
+   - Update remaining tasks
+   - Plan next day's activities
+   - Review performance metrics
+
+4. **Success Metrics**
+   - All activities logged
+   - Tasks completed or rescheduled
+   - Clear plan for next day
+
+## 4. Integration Points
+
+### 4.1 Admin-Sales Integration
+- Admin users can view and assist with sales user activities
+- Sales users can escalate issues to admin users
+- Both roles contribute to system effectiveness
+
+### 4.2 Cross-Role Communication
+- Clear hierarchy for support requests
+- Defined processes for data access requests
+- Collaborative approach to system improvement
+
+## 5. Success Factors
+- **User Adoption**: Both admin and sales users actively using the system
+- **Data Quality**: Consistent, accurate data entry across all journeys
+- **Efficiency**: Streamlined workflows reducing time spent on administrative tasks
+- **Effectiveness**: Improved customer relationships and sales outcomes
+- **Scalability**: Journeys that can accommodate growing user base and data volume
+
+---
+
+**Document Version**: 1.0  
+**Last Updated**: May 31, 2025  
+**Related Documents**: Product Requirements Document
