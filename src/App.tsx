@@ -16,6 +16,8 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
+import ContactsPage from "./pages/ContactsPage";
+import DealsPage from "./pages/DealsPage";
 import "./App.css";
 
 const AppRouter: React.FC = () => {
@@ -49,6 +51,22 @@ const AppRouter: React.FC = () => {
         element={
           <ProtectedRoute>
             <HomePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/contacts"
+        element={
+          <ProtectedRoute>
+            <ContactsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/deals"
+        element={
+          <ProtectedRoute>
+            <DealsPage />
           </ProtectedRoute>
         }
       />

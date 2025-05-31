@@ -11,6 +11,7 @@ import {
   SwatchIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
+  UsersIcon,
 } from "@heroicons/react/24/outline";
 
 const HomePage: React.FC = () => {
@@ -66,6 +67,26 @@ const HomePage: React.FC = () => {
 
               {/* Navigation Menu */}
               <div className="flex items-center space-x-2">
+                <Link to="/contacts">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center space-x-1"
+                  >
+                    <UsersIcon className="h-4 w-4" />
+                    <span>Contacts</span>
+                  </Button>
+                </Link>
+                <Link to="/deals">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center space-x-1"
+                  >
+                    <BriefcaseIcon className="h-4 w-4" />
+                    <span>Deals</span>
+                  </Button>
+                </Link>
                 <Link to="/profile">
                   <Button
                     variant="outline"
@@ -146,20 +167,24 @@ const HomePage: React.FC = () => {
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    leftIcon={<UserIcon className="h-5 w-5" />}
-                  >
-                    Add New Contact
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    leftIcon={<BriefcaseIcon className="h-5 w-5" />}
-                  >
-                    Create Deal
-                  </Button>
+                  <Link to="/contacts">
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      leftIcon={<UsersIcon className="h-5 w-5" />}
+                    >
+                      Manage Contacts
+                    </Button>
+                  </Link>
+                  <Link to="/deals">
+                    <Button
+                      variant="secondary"
+                      size="lg"
+                      leftIcon={<BriefcaseIcon className="h-5 w-5" />}
+                    >
+                      Manage Deals
+                    </Button>
+                  </Link>
                 </div>
 
                 {/* User Information Card */}

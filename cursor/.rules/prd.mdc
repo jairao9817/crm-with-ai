@@ -15,7 +15,7 @@ A comprehensive Customer Relationship Management (CRM) web application designed 
 - **Form Management**: React Hook Form
 - **Backend & Database**: Supabase
 - **Authentication**: Supabase Auth (Email/Password strategy)
-- **Responsive Design**: Mobile-first approach using Tailwind CSS
+- **Responsive Design**: Web-first approach using Tailwind CSS
 
 ### 1.3 Target Users
 - **Individual Users**: Personal CRM management with full access to their own data
