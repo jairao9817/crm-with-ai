@@ -30,7 +30,7 @@ interface NavigationItem {
 const navigation: NavigationItem[] = [
   {
     name: "Dashboard",
-    href: "/home",
+    href: "/dashboard",
     icon: HomeIcon,
     iconSolid: HomeIconSolid,
   },

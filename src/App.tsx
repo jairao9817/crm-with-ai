@@ -15,6 +15,7 @@ import SignupPage from "./pages/SignupPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import HomePage from "./pages/HomePage";
+import DashboardPage from "./pages/DashboardPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import ContactsPage from "./pages/ContactsPage";
@@ -32,24 +33,36 @@ const AppRouter: React.FC = () => {
       {/* Public routes */}
       <Route
         path="/login"
-        element={user ? <Navigate to="/home" replace /> : <LoginPage />}
+        element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />}
       />
       <Route
         path="/signup"
-        element={user ? <Navigate to="/home" replace /> : <SignupPage />}
+        element={user ? <Navigate to="/dashboard" replace /> : <SignupPage />}
       />
       <Route
         path="/forgot-password"
         element={
-          user ? <Navigate to="/home" replace /> : <ForgotPasswordPage />
+          user ? <Navigate to="/dashboard" replace /> : <ForgotPasswordPage />
         }
       />
       <Route
         path="/reset-password"
-        element={user ? <Navigate to="/home" replace /> : <ResetPasswordPage />}
+        element={
+          user ? <Navigate to="/dashboard" replace /> : <ResetPasswordPage />
+        }
       />
 
       {/* Protected routes with Layout */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <DashboardPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/home"
         element={
@@ -134,13 +147,13 @@ const AppRouter: React.FC = () => {
       {/* Default redirect */}
       <Route
         path="/"
-        element={<Navigate to={user ? "/home" : "/login"} replace />}
+        element={<Navigate to={user ? "/dashboard" : "/login"} replace />}
       />
 
       {/* Catch all route */}
       <Route
         path="*"
-        element={<Navigate to={user ? "/home" : "/login"} replace />}
+        element={<Navigate to={user ? "/dashboard" : "/login"} replace />}
       />
     </Routes>
   );

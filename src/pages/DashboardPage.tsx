@@ -19,7 +19,7 @@ import {
 } from "../components/ui";
 import { useDashboard } from "../hooks/useDashboard";
 
-const HomePage: React.FC = () => {
+const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const {
     metrics,
@@ -261,4 +261,4 @@ const HomePage: React.FC = () => {
   );
 };
 
-export default HomePage;
+export default DashboardPage;

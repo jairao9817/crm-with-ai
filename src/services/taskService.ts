@@ -303,4 +303,36 @@ export class TaskService {
 
     return data || [];
   }
+
+  // Get task statistics
+  static async getTaskStats(): Promise<{
+    totalTasks: number;
+    completedTasks: number;
+    pendingTasks: number;
+    overdueTasks: number;
+  }> {
+    try {
+      const [allTasks, overdueTasks] = await Promise.all([
+        this.getTasks(),
+        this.getOverdueTasks(),
+      ]);
+
+      const completedTasks = allTasks.filter(
+        (task) => task.status === "completed"
+      ).length;
+      const pendingTasks = allTasks.filter(
+        (task) => task.status === "pending"
+      ).length;
+
+      return {
+        totalTasks: allTasks.length,
+        completedTasks,
+        pendingTasks,
+        overdueTasks: overdueTasks.length,
+      };
+    } catch (error) {
+      console.error("Error fetching task stats:", error);
+      throw new Error("Failed to fetch task statistics");
+    }
+  }
 }
