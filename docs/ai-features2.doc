@@ -81,14 +81,52 @@ Implementation Steps:
 - Optionally, aggregate explanations for reporting on the dashboard.
 
 ---
+
+5. AI Response Management & Deletion
+Feature:
+Users can delete any AI-generated response from the history to manage their saved AI content.
+
+Where:
+- All AI feature components (Deal Coach, Persona Builder, Objection Handler, Win-Loss Explainer)
+- Both current response displays and history tabs
+
+User Journey:
+1. User views AI-generated content in any of the AI features.
+2. For current responses: A "Delete" button appears next to "Generate New" actions.
+3. For historical responses: A trash icon appears next to each saved response in the history tab.
+4. On click, user gets a confirmation dialog.
+5. After confirmation, the response is permanently deleted from the database.
+6. The UI refreshes to reflect the deletion.
+
+Implementation Details:
+- Added delete buttons with trash icons to all AI response displays
+- Implemented confirmation dialogs for safety
+- Added loading states during deletion
+- Automatic refresh of history after deletion
+- Clear current response if it was the one deleted
+- Error handling for failed deletions
+
+Components Updated:
+- PersonaGenerator.tsx: Delete personas from history tab
+- ObjectionHandler.tsx: Delete objection responses from history tab  
+- WinLossExplainer.tsx: Delete win-loss analyses from history tab
+- DealDetailPage.tsx: Delete AI coach suggestions from both current and history displays
+
+Services Used:
+- ContactPersonaService.deletePersona()
+- ObjectionResponseService.deleteObjectionResponse()
+- WinLossAnalysisService.deleteAnalysis()
+- DealCoachService.deleteSuggestion()
+
+---
 User Journey Flow Summary
 
-| Feature                  | Page(s)                | User Action                        | AI Interaction                        | Output Location         |
-|--------------------------|------------------------|-------------------------------------|----------------------------------------|------------------------|
-| Deal Coach AI            | DealDetailPage         | Click "AI Deal Coach"               | Send deal data to OpenAI, get steps    | Card/Modal on page     |
-| Customer Persona Builder | ContactDetailPage      | Click "Generate Persona"            | Send contact history to OpenAI         | Card/Section on page   |
-| Objection Handler        | Deal/Contact/Comm Page | Paste objection, click "Get Reply"  | Send objection/context to OpenAI       | Modal/Sidebar          |
-| Win-Loss Explainer       | DealDetailPage         | Click "Why did we win/lose?"        | Send closed deal data to OpenAI        | Card/Section on page   |
+| Feature                  | Page(s)                | User Action                        | AI Interaction                        | Output Location         | Delete Option           |
+|--------------------------|------------------------|-------------------------------------|----------------------------------------|------------------------|------------------------|
+| Deal Coach AI            | DealDetailPage         | Click "AI Deal Coach"               | Send deal data to OpenAI, get steps    | Card/Modal on page     | Current + History      |
+| Customer Persona Builder | ContactDetailPage      | Click "Generate Persona"            | Send contact history to OpenAI         | Card/Section on page   | History tab            |
+| Objection Handler        | Deal/Contact/Comm Page | Paste objection, click "Get Reply"  | Send objection/context to OpenAI       | Modal/Sidebar          | History tab            |
+| Win-Loss Explainer       | DealDetailPage         | Click "Why did we win/lose?"        | Send closed deal data to OpenAI        | Card/Section on page   | History tab            |
 
 ---
 
@@ -107,9 +145,12 @@ Next Steps
 2. Implement API integration with OpenAI (and optionally LangChain/vector DB).
 3. Test user flows and iterate on prompt engineering for best results.
 4. Document each feature in the user guide and onboarding.
+5. Implement comprehensive delete functionality for all AI responses.
 
 ---
 
 Note:
 - All AI features should clearly indicate to users that responses are AI-generated.
 - Consider logging user feedback on AI suggestions for future improvement.
+- All AI responses can be deleted by users for better content management.
+- Deletion requires confirmation to prevent accidental loss of valuable AI insights.

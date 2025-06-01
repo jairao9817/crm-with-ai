@@ -23,6 +23,7 @@ import {
   ArchiveBoxIcon,
   ClockIcon,
   MagnifyingGlassIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { aiService } from "../services/aiService";
 import { ObjectionResponseService } from "../services/objectionResponseService";
@@ -63,6 +64,9 @@ export const ObjectionHandler: React.FC<ObjectionHandlerProps> = ({
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [selectedTab, setSelectedTab] = useState("current");
   const [searchTerm, setSearchTerm] = useState("");
+  const [deletingResponseId, setDeletingResponseId] = useState<string | null>(
+    null
+  );
 
   // Load objection response history when modal opens
   useEffect(() => {
@@ -158,6 +162,34 @@ export const ObjectionHandler: React.FC<ObjectionHandlerProps> = ({
         return "warning";
       default:
         return "default";
+    }
+  };
+
+  const handleDeleteResponse = async (responseId: string) => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this objection response? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setDeletingResponseId(responseId);
+      await ObjectionResponseService.deleteObjectionResponse(responseId);
+
+      // Refresh the history
+      await loadObjectionHistory();
+
+      // If we deleted the current response, clear it
+      if (response?.id === responseId) {
+        setResponse(null);
+      }
+    } catch (err) {
+      console.error("Failed to delete objection response:", err);
+      setError("Failed to delete response. Please try again.");
+    } finally {
+      setDeletingResponseId(null);
     }
   };
 
@@ -473,6 +505,46 @@ export const ObjectionHandler: React.FC<ObjectionHandlerProps> = ({
                             </span>
                           </div>
                           <div className="ml-6">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2 text-xs text-text-secondary">
+                                <ClockIcon className="w-3 h-3" />
+                                <span>
+                                  {new Date(
+                                    objectionResponse.generated_at
+                                  ).toLocaleDateString("en-US", {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </span>
+                                {index === 0 && (
+                                  <Chip
+                                    size="sm"
+                                    color="success"
+                                    variant="flat"
+                                  >
+                                    Latest
+                                  </Chip>
+                                )}
+                              </div>
+                              <Button
+                                isIconOnly
+                                size="sm"
+                                variant="light"
+                                color="danger"
+                                onPress={() =>
+                                  handleDeleteResponse(objectionResponse.id)
+                                }
+                                isLoading={
+                                  deletingResponseId === objectionResponse.id
+                                }
+                                title="Delete response"
+                              >
+                                <TrashIcon className="w-3 h-3" />
+                              </Button>
+                            </div>
                             {renderObjectionResponse(objectionResponse, true)}
                           </div>
                         </div>

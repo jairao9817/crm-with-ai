@@ -17,6 +17,7 @@ import {
   ShoppingCartIcon,
   ClockIcon,
   ArchiveBoxIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import type {
   Contact,
@@ -49,6 +50,9 @@ export const PersonaGenerator: React.FC<PersonaGeneratorProps> = ({
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState("current");
+  const [deletingPersonaId, setDeletingPersonaId] = useState<string | null>(
+    null
+  );
 
   // Load existing personas on component mount
   useEffect(() => {
@@ -96,6 +100,34 @@ export const PersonaGenerator: React.FC<PersonaGeneratorProps> = ({
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeletePersona = async (personaId: string) => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this persona? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setDeletingPersonaId(personaId);
+      await ContactPersonaService.deletePersona(personaId);
+
+      // Refresh the history
+      await loadExistingPersonas();
+
+      // If we deleted the current persona, clear it
+      if (currentPersona?.id === personaId) {
+        setCurrentPersona(null);
+      }
+    } catch (err) {
+      console.error("Failed to delete persona:", err);
+      setError("Failed to delete persona. Please try again.");
+    } finally {
+      setDeletingPersonaId(null);
     }
   };
 
@@ -327,14 +359,27 @@ export const PersonaGenerator: React.FC<PersonaGeneratorProps> = ({
                           <h4 className="text-sm font-semibold text-text-primary">
                             Persona #{personaHistory.length - index}
                           </h4>
-                          <div className="flex items-center gap-2 text-xs text-text-secondary">
-                            <ClockIcon className="w-3 h-3" />
-                            {formatDate(persona.generated_at)}
-                            {index === 0 && (
-                              <Chip size="sm" color="success" variant="flat">
-                                Latest
-                              </Chip>
-                            )}
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 text-xs text-text-secondary">
+                              <ClockIcon className="w-3 h-3" />
+                              {formatDate(persona.generated_at)}
+                              {index === 0 && (
+                                <Chip size="sm" color="success" variant="flat">
+                                  Latest
+                                </Chip>
+                              )}
+                            </div>
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              variant="light"
+                              color="danger"
+                              onPress={() => handleDeletePersona(persona.id)}
+                              isLoading={deletingPersonaId === persona.id}
+                              title="Delete persona"
+                            >
+                              <TrashIcon className="w-3 h-3" />
+                            </Button>
                           </div>
                         </div>
                       </CardHeader>

@@ -23,6 +23,7 @@ import {
   ClockIcon,
   TrophyIcon,
   XCircleIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { aiService } from "../services/aiService";
 import { WinLossAnalysisService } from "../services/winLossAnalysisService";
@@ -62,6 +63,9 @@ export const WinLossExplainer: React.FC<WinLossExplainerProps> = ({
   >([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [selectedTab, setSelectedTab] = useState("current");
+  const [deletingAnalysisId, setDeletingAnalysisId] = useState<string | null>(
+    null
+  );
 
   // Load analysis history when modal opens
   useEffect(() => {
@@ -138,6 +142,34 @@ export const WinLossExplainer: React.FC<WinLossExplainerProps> = ({
 
   const getOutcomeColor = (outcome: string) => {
     return outcome === "won" ? "success" : "danger";
+  };
+
+  const handleDeleteAnalysis = async (analysisId: string) => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this win-loss analysis? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setDeletingAnalysisId(analysisId);
+      await WinLossAnalysisService.deleteAnalysis(analysisId);
+
+      // Refresh the history
+      await loadAnalysisHistory();
+
+      // If we deleted the current analysis, clear it
+      if (analysis?.id === analysisId) {
+        setAnalysis(null);
+      }
+    } catch (err) {
+      console.error("Failed to delete win-loss analysis:", err);
+      setError("Failed to delete analysis. Please try again.");
+    } finally {
+      setDeletingAnalysisId(null);
+    }
   };
 
   const renderAnalysis = (
@@ -427,24 +459,45 @@ export const WinLossExplainer: React.FC<WinLossExplainerProps> = ({
                             </span>
                           </div>
                           <div className="ml-6">
-                            <div className="flex items-center gap-2 mb-2">
-                              <ClockIcon className="w-3 h-3 text-text-secondary" />
-                              <span className="text-xs text-text-secondary">
-                                {new Date(
-                                  analysisData.generated_at
-                                ).toLocaleDateString("en-US", {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </span>
-                              {index === 0 && (
-                                <Chip size="sm" color="success" variant="flat">
-                                  Latest
-                                </Chip>
-                              )}
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2 text-xs text-text-secondary">
+                                <ClockIcon className="w-3 h-3" />
+                                <span>
+                                  {new Date(
+                                    analysisData.generated_at
+                                  ).toLocaleDateString("en-US", {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </span>
+                                {index === 0 && (
+                                  <Chip
+                                    size="sm"
+                                    color="success"
+                                    variant="flat"
+                                  >
+                                    Latest
+                                  </Chip>
+                                )}
+                              </div>
+                              <Button
+                                isIconOnly
+                                size="sm"
+                                variant="light"
+                                color="danger"
+                                onPress={() =>
+                                  handleDeleteAnalysis(analysisData.id)
+                                }
+                                isLoading={
+                                  deletingAnalysisId === analysisData.id
+                                }
+                                title="Delete analysis"
+                              >
+                                <TrashIcon className="w-3 h-3" />
+                              </Button>
                             </div>
                             {renderAnalysis(analysisData, true)}
                           </div>
