@@ -4,6 +4,7 @@ export { ContactForm } from "./ContactForm";
 export { DealForm } from "./DealForm";
 export { default as Sidebar } from "./Sidebar";
 export { default as Layout } from "./Layout";
+export { ObjectionHandler } from "./ObjectionHandler";
 
 // Common components
 export {

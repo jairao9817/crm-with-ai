@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Input } from "@heroui/react";
+import { Input, Button } from "@heroui/react";
 import {
   PlusIcon,
   PhoneIcon,
@@ -8,6 +8,7 @@ import {
   CalendarIcon,
   DocumentTextIcon,
   ChatBubbleLeftRightIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { CommunicationService } from "../services/communicationService";
 import { ContactService } from "../services/contactService";
@@ -20,6 +21,8 @@ import {
   usePageData,
   useFormModal,
 } from "../components/common";
+import { ObjectionHandler } from "../components/ObjectionHandler";
+import { useDisclosure } from "@heroui/react";
 import type { StatItem } from "../components/common";
 import type {
   Communication,
@@ -28,7 +31,7 @@ import type {
   Contact,
   Deal,
   CommunicationType,
-} from "../types";
+} from "../types/index";
 
 interface CommunicationFormData {
   contact_id: string;
@@ -87,6 +90,12 @@ const CommunicationsPage: React.FC = () => {
       },
       onSuccess: refreshData,
     });
+
+  const {
+    isOpen: isObjectionHandlerOpen,
+    onOpen: onObjectionHandlerOpen,
+    onClose: onObjectionHandlerClose,
+  } = useDisclosure();
 
   const selectedContactId = form.watch("contact_id");
 
@@ -235,89 +244,131 @@ const CommunicationsPage: React.FC = () => {
   );
 
   return (
-    <PageContainer
-      title="Communications"
-      subtitle="Track and manage customer communications"
-      actionLabel="Log Communication"
-      actionIcon={<PlusIcon className="w-4 h-4" />}
-      onAction={onOpen}
-      stats={stats}
-      searchValue={filters.search || ""}
-      onSearchChange={(value) =>
-        setFilters((prev) => ({ ...prev, search: value }))
-      }
-      searchPlaceholder="Search communications..."
-      showFilters={showFilters}
-      onToggleFilters={() => setShowFilters(!showFilters)}
-      filtersContent={filtersContent}
-      items={communications}
-      loading={loading}
-      renderItem={renderCommunicationItem}
-      onItemClick={(communication) =>
-        navigate(`/communications/${communication.id}`)
-      }
-      emptyState={{
-        icon: <ChatBubbleLeftRightIcon className="w-16 h-16" />,
-        title: "No communications found",
-        description:
-          "Start logging your customer communications to track interactions.",
-        actionLabel: "Log Communication",
-        onAction: onOpen,
-      }}
-    >
-      <FormModal
-        isOpen={isOpen}
-        onClose={onClose}
-        title="Log New Communication"
-        onSubmit={form.handleSubmit(handleSubmit)}
-        isSubmitting={isSubmitting}
-        submitLabel="Log Communication"
+    <>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Communications
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Track and manage customer communications
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            color="warning"
+            variant="bordered"
+            startContent={<ExclamationTriangleIcon className="w-4 h-4" />}
+            onPress={onObjectionHandlerOpen}
+          >
+            Handle Objection
+          </Button>
+          <Button
+            color="primary"
+            startContent={<PlusIcon className="w-4 h-4" />}
+            onPress={onOpen}
+          >
+            Log Communication
+          </Button>
+        </div>
+      </div>
+
+      <PageContainer
+        title="Communications"
+        subtitle="Track and manage customer communications"
+        actionLabel="Log Communication"
+        actionIcon={<PlusIcon className="w-4 h-4" />}
+        onAction={onOpen}
+        stats={stats}
+        searchValue={filters.search || ""}
+        onSearchChange={(value) =>
+          setFilters((prev) => ({ ...prev, search: value }))
+        }
+        searchPlaceholder="Search communications..."
+        showFilters={showFilters}
+        onToggleFilters={() => setShowFilters(!showFilters)}
+        filtersContent={filtersContent}
+        items={communications}
+        loading={loading}
+        renderItem={renderCommunicationItem}
+        onItemClick={(communication) =>
+          navigate(`/communications/${communication.id}`)
+        }
+        emptyState={{
+          icon: <ChatBubbleLeftRightIcon className="w-16 h-16" />,
+          title: "No communications found",
+          description:
+            "Start logging your customer communications to track interactions.",
+          actionLabel: "Log Communication",
+          onAction: onOpen,
+        }}
       >
-        <FormField
-          name="contact_id"
-          control={form.control}
-          label="Contact"
-          type="select"
-          required
-          options={contactOptions}
+        <FormModal
+          isOpen={isOpen}
+          onClose={onClose}
+          title="Log New Communication"
+          onSubmit={form.handleSubmit(handleSubmit)}
+          isSubmitting={isSubmitting}
+          submitLabel="Log Communication"
+        >
+          <FormField
+            name="contact_id"
+            control={form.control}
+            label="Contact"
+            type="select"
+            required
+            options={contactOptions}
+          />
+          <FormField
+            name="type"
+            control={form.control}
+            label="Communication Type"
+            type="select"
+            required
+            options={COMMUNICATION_TYPES}
+          />
+          <FormField
+            name="deal_id"
+            control={form.control}
+            label="Deal (Optional)"
+            type="select"
+            options={dealOptions}
+          />
+          <FormField
+            name="subject"
+            control={form.control}
+            label="Subject (Optional)"
+            placeholder="Enter communication subject"
+          />
+          <FormField
+            name="content"
+            control={form.control}
+            label="Content"
+            type="textarea"
+            placeholder="Enter communication details"
+          />
+          <FormField
+            name="communication_date"
+            control={form.control}
+            label="Date & Time"
+            type="datetime-local"
+            defaultValue={new Date().toISOString().slice(0, 16)}
+          />
+        </FormModal>
+
+        {/* Objection Handler Modal */}
+        <ObjectionHandler
+          isOpen={isObjectionHandlerOpen}
+          onClose={onObjectionHandlerClose}
+          context={
+            {
+              // Context will be empty here since we're not in a specific communication
+              // Users can still use it for general objection handling
+            }
+          }
         />
-        <FormField
-          name="type"
-          control={form.control}
-          label="Communication Type"
-          type="select"
-          required
-          options={COMMUNICATION_TYPES}
-        />
-        <FormField
-          name="deal_id"
-          control={form.control}
-          label="Deal (Optional)"
-          type="select"
-          options={dealOptions}
-        />
-        <FormField
-          name="subject"
-          control={form.control}
-          label="Subject (Optional)"
-          placeholder="Enter communication subject"
-        />
-        <FormField
-          name="content"
-          control={form.control}
-          label="Content"
-          type="textarea"
-          placeholder="Enter communication details"
-        />
-        <FormField
-          name="communication_date"
-          control={form.control}
-          label="Date & Time"
-          type="datetime-local"
-          defaultValue={new Date().toISOString().slice(0, 16)}
-        />
-      </FormModal>
-    </PageContainer>
+      </PageContainer>
+    </>
   );
 };
 

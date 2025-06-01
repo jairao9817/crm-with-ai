@@ -28,12 +28,14 @@ import {
   ClipboardDocumentListIcon,
   UserIcon,
   CheckCircleIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { useDeal } from "../hooks/useDeals";
 import { useDealRelatedData } from "../hooks/useDealRelatedData";
 import { DealForm } from "../components/DealForm";
 import { DealCloseModal } from "../components/DealCloseModal";
-import type { DealStage } from "../types";
+import { ObjectionHandler } from "../components/ObjectionHandler";
+import type { DealStage } from "../types/index";
 import { DealService } from "../services/dealService";
 
 const stageConfig: Record<
@@ -85,6 +87,12 @@ const DealDetailPage: React.FC = () => {
     isOpen: isCloseModalOpen,
     onOpen: onCloseModalOpen,
     onClose: onCloseModalClose,
+  } = useDisclosure();
+
+  const {
+    isOpen: isObjectionHandlerOpen,
+    onOpen: onObjectionHandlerOpen,
+    onClose: onObjectionHandlerClose,
   } = useDisclosure();
 
   const [isAICoachOpen, setAICoachOpen] = useState(false);
@@ -265,6 +273,15 @@ const DealDetailPage: React.FC = () => {
           </div>
         </div>
         <div className="flex gap-2">
+          {/* AI Objection Handler Button */}
+          <Button
+            color="warning"
+            variant="bordered"
+            startContent={<ExclamationTriangleIcon className="w-4 h-4" />}
+            onPress={onObjectionHandlerOpen}
+          >
+            Handle Objection
+          </Button>
           {/* AI Deal Coach Button */}
           <Button
             color="secondary"
@@ -739,6 +756,17 @@ const DealDetailPage: React.FC = () => {
           onSuccess={handleCloseSuccess}
         />
       )}
+
+      {/* Objection Handler Modal */}
+      <ObjectionHandler
+        isOpen={isObjectionHandlerOpen}
+        onClose={onObjectionHandlerClose}
+        context={{
+          contact: deal.contact,
+          deal: deal,
+          product_service: deal.title,
+        }}
+      />
 
       {/* AI Deal Coach Modal */}
       <Modal

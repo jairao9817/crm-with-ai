@@ -22,6 +22,7 @@ import {
   BuildingOfficeIcon,
   ClockIcon,
   HashtagIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { useForm, Controller } from "react-hook-form";
 import { CommunicationService } from "../services/communicationService";
@@ -35,13 +36,15 @@ import SidebarActions from "../components/SidebarActions";
 import ContactCard from "../components/ContactCard";
 import DealCard from "../components/DealCard";
 import CommunicationNotes from "../components/CommunicationNotes";
+import { ObjectionHandler } from "../components/ObjectionHandler";
+import { useDisclosure } from "@heroui/react";
 import type {
   Communication,
   UpdateCommunicationInput,
   Contact,
   Deal,
   CommunicationType,
-} from "../types";
+} from "../types/index";
 
 interface CommunicationFormData {
   contact_id: string;
@@ -77,6 +80,12 @@ const CommunicationDetailPage: React.FC = () => {
     redirectPath: "/communications",
     itemName: "communication",
   });
+
+  const {
+    isOpen: isObjectionHandlerOpen,
+    onOpen: onObjectionHandlerOpen,
+    onClose: onObjectionHandlerClose,
+  } = useDisclosure();
 
   // Custom refresh function for communication with notes
   const refreshCommunication = async () => {
@@ -175,6 +184,12 @@ const CommunicationDetailPage: React.FC = () => {
   const config = getTypeConfig(communication.type);
 
   const sidebarActions = [
+    {
+      label: "Handle Objection",
+      color: "warning" as const,
+      icon: <ExclamationTriangleIcon className="w-4 h-4" />,
+      onClick: onObjectionHandlerOpen,
+    },
     {
       label: "Edit Communication",
       color: "primary" as const,
@@ -346,6 +361,17 @@ const CommunicationDetailPage: React.FC = () => {
           )}
         </SidebarActions>
       </div>
+
+      {/* Objection Handler Modal */}
+      <ObjectionHandler
+        isOpen={isObjectionHandlerOpen}
+        onClose={onObjectionHandlerClose}
+        context={{
+          contact: communication.contact,
+          deal: communication.deal,
+          communication: communication,
+        }}
+      />
 
       <Modal isOpen={isEditOpen} onClose={onEditClose} size="3xl">
         <ModalContent>

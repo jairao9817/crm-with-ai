@@ -268,3 +268,25 @@ export interface GeneratePersonaInput {
     purchaseHistory: PurchaseHistory[];
   };
 }
+
+// AI Objection Handler Types
+export interface ObjectionHandlerInput {
+  objection: string;
+  context?: {
+    contact?: Contact;
+    deal?: Deal;
+    communication?: Communication;
+    industry?: string;
+    product_service?: string;
+  };
+}
+
+export interface ObjectionHandlerResponse {
+  id: string;
+  objection: string;
+  suggested_response: string;
+  response_strategy: string;
+  key_points: string[];
+  tone: "professional" | "empathetic" | "confident" | "consultative";
+  generated_at: string;
+}

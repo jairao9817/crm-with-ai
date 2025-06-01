@@ -24,11 +24,13 @@ import {
   CalendarIcon,
   CurrencyDollarIcon,
   ChatBubbleLeftRightIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { useContact } from "../hooks/useContacts";
 import { useContactRelatedData } from "../hooks/useContactRelatedData";
 import { ContactForm } from "../components/ContactForm";
 import { PersonaGenerator } from "../components/PersonaGenerator";
+import { ObjectionHandler } from "../components/ObjectionHandler";
 
 const ContactDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -52,6 +54,12 @@ const ContactDetailPage: React.FC = () => {
     isOpen: isEditOpen,
     onOpen: onEditOpen,
     onClose: onEditClose,
+  } = useDisclosure();
+
+  const {
+    isOpen: isObjectionHandlerOpen,
+    onOpen: onObjectionHandlerOpen,
+    onClose: onObjectionHandlerClose,
   } = useDisclosure();
 
   const handleFormSuccess = () => {
@@ -185,13 +193,23 @@ const ContactDetailPage: React.FC = () => {
             )}
           </div>
         </div>
-        <Button
-          color="primary"
-          startContent={<PencilIcon className="w-4 h-4" />}
-          onPress={onEditOpen}
-        >
-          Edit Contact
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            color="warning"
+            variant="bordered"
+            startContent={<ExclamationTriangleIcon className="w-4 h-4" />}
+            onPress={onObjectionHandlerOpen}
+          >
+            Handle Objection
+          </Button>
+          <Button
+            color="primary"
+            startContent={<PencilIcon className="w-4 h-4" />}
+            onPress={onEditOpen}
+          >
+            Edit Contact
+          </Button>
+        </div>
       </div>
 
       {/* Contact Overview Cards */}
@@ -511,6 +529,16 @@ const ContactDetailPage: React.FC = () => {
           </div>
         </Tab>
       </Tabs>
+
+      {/* Objection Handler Modal */}
+      <ObjectionHandler
+        isOpen={isObjectionHandlerOpen}
+        onClose={onObjectionHandlerClose}
+        context={{
+          contact: contact,
+          industry: contact.company ? undefined : undefined, // Could be enhanced with industry detection
+        }}
+      />
 
       {/* Edit Contact Modal */}
       <Modal isOpen={isEditOpen} onClose={onEditClose} size="2xl">
