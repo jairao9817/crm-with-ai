@@ -327,7 +327,7 @@ export const ObjectionHandler: React.FC<ObjectionHandlerProps> = ({
             <LightBulbIcon className="w-5 h-5 text-primary" />
             <span>AI Objection Handler</span>
             <Chip size="sm" color="warning" variant="flat">
-              AI-powered
+              AI
             </Chip>
             {objectionHistory.length > 0 && (
               <Chip size="sm" variant="flat" color="primary">

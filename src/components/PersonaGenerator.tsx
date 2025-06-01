@@ -255,6 +255,9 @@ export const PersonaGenerator: React.FC<PersonaGeneratorProps> = ({
           <h3 className="text-lg font-semibold text-text-primary">
             AI Behavioral Persona
           </h3>
+          <Chip size="sm" color="warning" variant="flat">
+            AI
+          </Chip>
           {personaHistory.length > 0 && (
             <Chip size="sm" variant="flat" color="primary">
               {personaHistory.length} generated

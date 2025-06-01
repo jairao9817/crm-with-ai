@@ -427,6 +427,11 @@ const CommunicationsPage: React.FC = () => {
           startContent={<ExclamationTriangleIcon className="w-4 h-4" />}
           onPress={onObjectionHandlerOpen}
           className="shadow-lg"
+          endContent={
+            <Chip size="sm" color="warning" variant="flat">
+              AI
+            </Chip>
+          }
         >
           Handle Objection
         </Button>

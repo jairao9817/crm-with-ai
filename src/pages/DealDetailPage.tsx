@@ -364,6 +364,11 @@ const DealDetailPage: React.FC = () => {
               variant="bordered"
               startContent={<ChartBarIcon className="w-4 h-4" />}
               onPress={onWinLossExplainerOpen}
+              endContent={
+                <Chip size="sm" color="warning" variant="flat">
+                  AI
+                </Chip>
+              }
             >
               Why Did We {deal.stage === "closed-won" ? "Win" : "Lose"}?
             </Button>
@@ -374,6 +379,11 @@ const DealDetailPage: React.FC = () => {
             variant="bordered"
             startContent={<ExclamationTriangleIcon className="w-4 h-4" />}
             onPress={onObjectionHandlerOpen}
+            endContent={
+              <Chip size="sm" color="warning" variant="flat">
+                AI
+              </Chip>
+            }
           >
             Handle Objection
           </Button>
@@ -383,6 +393,11 @@ const DealDetailPage: React.FC = () => {
             startContent={<ChatBubbleLeftRightIcon className="w-4 h-4" />}
             onPress={handleOpenAICoach}
             variant="bordered"
+            endContent={
+              <Chip size="sm" color="warning" variant="flat">
+                AI
+              </Chip>
+            }
           >
             AI Deal Coach
           </Button>
@@ -890,7 +905,7 @@ const DealDetailPage: React.FC = () => {
               <ChatBubbleLeftRightIcon className="w-5 h-5 text-primary" />
               <span>AI Deal Coach</span>
               <Chip size="sm" color="warning" variant="flat">
-                AI-generated
+                AI
               </Chip>
               {aiCoachHistory.length > 0 && (
                 <Chip size="sm" variant="flat" color="primary">

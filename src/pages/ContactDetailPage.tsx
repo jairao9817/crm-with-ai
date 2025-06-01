@@ -199,6 +199,11 @@ const ContactDetailPage: React.FC = () => {
             variant="bordered"
             startContent={<ExclamationTriangleIcon className="w-4 h-4" />}
             onPress={onObjectionHandlerOpen}
+            endContent={
+              <Chip size="sm" color="warning" variant="flat">
+                AI
+              </Chip>
+            }
           >
             Handle Objection
           </Button>

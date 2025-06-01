@@ -312,7 +312,7 @@ export const WinLossExplainer: React.FC<WinLossExplainerProps> = ({
             <ChartBarIcon className="w-5 h-5 text-primary" />
             <span>Win-Loss Analysis</span>
             <Chip size="sm" color="warning" variant="flat">
-              AI-powered
+              AI
             </Chip>
             {analysisHistory.length > 0 && (
               <Chip size="sm" variant="flat" color="primary">
