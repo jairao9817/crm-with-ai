@@ -113,13 +113,13 @@ export const DealCloseModal: React.FC<DealCloseModalProps> = ({
               }}
               render={({ field }) => (
                 <Input
-                  {...field}
                   type="number"
                   step="0.01"
                   label="Purchase Amount"
                   startContent="$"
                   isInvalid={!!errors.amount}
                   errorMessage={errors.amount?.message}
+                  value={field.value?.toString() || ""}
                   onChange={(e) =>
                     field.onChange(parseFloat(e.target.value) || 0)
                   }

@@ -7,11 +7,11 @@ interface PipelineOverviewProps {
 }
 
 const stageConfig = {
-  lead: { label: "Lead", color: "bg-blue-500" },
-  prospect: { label: "Prospect", color: "bg-yellow-500" },
-  negotiation: { label: "Negotiation", color: "bg-orange-500" },
-  "closed-won": { label: "Closed Won", color: "bg-green-500" },
-  "closed-lost": { label: "Closed Lost", color: "bg-red-500" },
+  lead: { label: "Lead", color: "bg-primary" },
+  prospect: { label: "Prospect", color: "bg-warning" },
+  negotiation: { label: "Negotiation", color: "bg-secondary" },
+  "closed-won": { label: "Closed Won", color: "bg-success" },
+  "closed-lost": { label: "Closed Lost", color: "bg-danger" },
 };
 
 const PipelineOverview: React.FC<PipelineOverviewProps> = ({

@@ -284,9 +284,7 @@ const CommunicationNotes: React.FC<CommunicationNotesProps> = ({
                       }}
                     >
                       {NOTE_TYPES.map((type) => (
-                        <SelectItem key={type.key} value={type.key}>
-                          {type.label}
-                        </SelectItem>
+                        <SelectItem key={type.key}>{type.label}</SelectItem>
                       ))}
                     </Select>
                   )}
@@ -344,9 +342,7 @@ const CommunicationNotes: React.FC<CommunicationNotesProps> = ({
                       }}
                     >
                       {NOTE_TYPES.map((type) => (
-                        <SelectItem key={type.key} value={type.key}>
-                          {type.label}
-                        </SelectItem>
+                        <SelectItem key={type.key}>{type.label}</SelectItem>
                       ))}
                     </Select>
                   )}

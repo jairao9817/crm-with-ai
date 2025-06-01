@@ -12,6 +12,7 @@ A modern, AI-powered CRM application built with React, TypeScript, and Supabase.
 - **Communication Tracking**: Log emails, calls, meetings, and notes
 - **Purchase History**: Track customer purchase patterns
 - **Dashboard Analytics**: Visual insights into sales performance
+- **User Settings**: Personalized preferences and AI configuration
 
 ### 🤖 AI-Powered Features
 
@@ -19,6 +20,7 @@ A modern, AI-powered CRM application built with React, TypeScript, and Supabase.
 - **Customer Persona Builder**: Auto-generate behavioral profiles from interaction data
 - **Objection Handler**: AI-powered responses to customer objections
 - **Win-Loss Explainer**: Understand why deals were won or lost
+- **Personal API Key Management**: Configure your own OpenAI API key through the settings
 
 ## 🛠️ Technology Stack
 
@@ -34,7 +36,7 @@ A modern, AI-powered CRM application built with React, TypeScript, and Supabase.
 
 - Node.js 18+ and npm
 - Supabase account and project
-- OpenAI API key
+- OpenAI API key (can be configured per-user or system-wide)
 
 ## 🚀 Quick Start
 
@@ -53,6 +55,7 @@ Create a `.env.local` file in the root directory:
 ```env
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+# Optional: System-wide OpenAI API key (users can override in settings)
 VITE_OPENAI_API_KEY=your_openai_api_key
 ```
 
@@ -60,8 +63,10 @@ VITE_OPENAI_API_KEY=your_openai_api_key
 
 1. Go to your Supabase project dashboard
 2. Navigate to the SQL Editor
-3. Copy and run the contents of `scripts/setup-ai-features.sql`
-4. This will create all necessary tables and security policies
+3. Run the following scripts in order:
+   - Copy and run the contents of `database/schema.sql` (core tables)
+   - Copy and run the contents of `scripts/setup-ai-features.sql` (AI features)
+   - Copy and run the contents of `scripts/setup-user-settings.sql` (user settings)
 
 ### 4. Start Development Server
 
@@ -71,30 +76,63 @@ npm run dev
 
 The application will be available at `http://localhost:5173`
 
+## 🔑 OpenAI API Key Configuration
+
+### Option 1: User-Configured API Keys (Recommended)
+
+Users can configure their own OpenAI API keys through the application:
+
+1. Navigate to **Settings** in the application
+2. Find the **AI Configuration** section
+3. Enter your OpenAI API key
+4. Click **Test** to verify the key works
+5. Click **Save AI Settings**
+
+**Benefits:**
+
+- Each user controls their own AI usage and costs
+- No shared API key limits
+- Better security and privacy
+- Users can update keys independently
+
+### Option 2: System-Wide API Key
+
+Set `VITE_OPENAI_API_KEY` in your environment variables for a fallback system-wide key.
+
+**Note:** User-configured keys take priority over the system-wide key.
+
 ## 📊 AI Features Setup
 
 ### OpenAI Configuration
 
 1. Get an API key from [OpenAI](https://platform.openai.com/api-keys)
-2. Add it to your `.env.local` file as `VITE_OPENAI_API_KEY`
+2. Configure it either:
+   - **Per-user**: Through the Settings page in the application
+   - **System-wide**: Add to `.env.local` as `VITE_OPENAI_API_KEY`
 3. Ensure your OpenAI account has sufficient credits
 
 ### Database Schema
 
-The AI features require additional database tables. Run the setup script:
+The AI features require additional database tables. Run the setup scripts:
 
 ```sql
+-- 1. Core CRM tables
+-- Copy contents of database/schema.sql
+
+-- 2. AI features tables
 -- Copy contents of scripts/setup-ai-features.sql
--- Paste and execute in Supabase SQL Editor
+
+-- 3. User settings table
+-- Copy contents of scripts/setup-user-settings.sql
 ```
 
 ### Testing AI Features
 
-Run the test script to verify everything works:
+After setting up your API key in Settings, test the AI features:
 
-```bash
-npm run test:ai-features
-```
+1. Go to any contact and generate a persona
+2. Open a deal and try the AI coach
+3. Test objection handling in communications
 
 ## 🏗️ Project Structure
 
@@ -107,8 +145,10 @@ src/
 ├── hooks/              # Custom React hooks
 ├── lib/                # Library configurations
 ├── pages/              # Page components
+│   └── SettingsPage.tsx    # User settings with API key config
 ├── services/           # API and business logic
-│   ├── aiService.ts           # Central AI service
+│   ├── aiService.ts           # Central AI service with dynamic client
+│   ├── settingsService.ts     # User settings management
 │   ├── contactPersonaService.ts
 │   ├── dealCoachService.ts
 │   ├── objectionResponseService.ts
@@ -118,7 +158,10 @@ src/
 
 database/               # Database schemas
 docs/                   # Documentation
+├── OPENAI_API_KEY_SETUP.md  # Detailed API key setup guide
 scripts/                # Setup and utility scripts
+├── setup-ai-features.sql
+└── setup-user-settings.sql
 ```
 
 ## 🔧 Available Scripts
@@ -127,7 +170,6 @@ scripts/                # Setup and utility scripts
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
-- `npm run test:ai-features` - Test AI features
 
 ## 📖 Usage Guide
 
@@ -145,7 +187,23 @@ scripts/                # Setup and utility scripts
 3. Click on deals to view details and add tasks
 4. Use AI features for coaching and objection handling
 
+### User Settings
+
+1. Navigate to **Settings** from the main menu
+2. Configure your preferences:
+   - **AI Configuration**: Set your OpenAI API key
+   - **Notifications**: Email and push notification preferences
+   - **Privacy**: Data sharing and profile visibility
+   - **Preferences**: Language, timezone, date format, currency
+
 ### AI Features Usage
+
+#### Setting Up AI Features
+
+1. Go to **Settings** → **AI Configuration**
+2. Enter your OpenAI API key
+3. Click **Test** to verify it works
+4. Save your settings
 
 #### Deal Coach AI
 
@@ -176,12 +234,14 @@ scripts/                # Setup and utility scripts
 - **Row Level Security (RLS)**: Users can only access their own data
 - **Authentication**: Secure user authentication via Supabase Auth
 - **Data Privacy**: AI responses are stored per-user
-- **API Security**: Environment variables for sensitive keys
+- **API Key Security**: User API keys are stored securely with user-level access
+- **Environment Variables**: System-wide keys stored as environment variables
 
 ## 📈 Performance Considerations
 
 - **Database Indexing**: Optimized queries with proper indexes
 - **AI Response Caching**: Database storage reduces redundant API calls
+- **Dynamic AI Client**: OpenAI client created on-demand with user's API key
 - **Lazy Loading**: Components load on demand
 - **Error Boundaries**: Graceful error handling
 
@@ -195,9 +255,10 @@ scripts/                # Setup and utility scripts
 
 ## 📚 Documentation
 
-- [AI Features Implementation Guide](docs/AI_FEATURES_IMPLEMENTATION.md)
-- [Database Schema](database/ai-features-schema.sql)
-- [API Documentation](docs/api-documentation.md)
+- [OpenAI API Key Setup Guide](docs/OPENAI_API_KEY_SETUP.md)
+- [Database Schema](database/schema.sql)
+- [AI Features Schema](scripts/setup-ai-features.sql)
+- [User Settings Schema](scripts/setup-user-settings.sql)
 
 ## 🐛 Troubleshooting
 
@@ -205,26 +266,35 @@ scripts/                # Setup and utility scripts
 
 1. **AI Features Not Working**
 
-   - Check OpenAI API key is set correctly
-   - Verify API key has sufficient credits
-   - Ensure database schema is set up
+   - Check OpenAI API key is configured in Settings
+   - Use the Test button to verify your API key
+   - Verify API key has sufficient credits in OpenAI dashboard
+   - Ensure user_settings table is created in database
 
-2. **Database Connection Issues**
+2. **"API key not found" Error**
+
+   - Go to Settings → AI Configuration
+   - Enter your OpenAI API key and save
+   - Alternatively, set VITE_OPENAI_API_KEY environment variable
+
+3. **Database Connection Issues**
 
    - Verify Supabase URL and keys
    - Check RLS policies are applied
    - Ensure user is authenticated
+   - Run all database setup scripts
 
-3. **Build Errors**
+4. **Build Errors**
    - Clear node_modules and reinstall
    - Check TypeScript errors
    - Verify environment variables
 
 ### Getting Help
 
-- Check the [troubleshooting guide](docs/AI_FEATURES_IMPLEMENTATION.md#troubleshooting)
+- Check the [OpenAI API Key Setup Guide](docs/OPENAI_API_KEY_SETUP.md)
 - Review error messages in browser console
-- Verify all environment variables are set
+- Verify all database tables are created
+- Test your API key in Settings
 
 ## 📄 License
 

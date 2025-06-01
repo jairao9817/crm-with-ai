@@ -31,12 +31,10 @@ const StatsGrid: React.FC<StatsGridProps> = ({ stats, columns = 4 }) => {
           <CardBody className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {stat.label}
-                </p>
+                <p className="text-sm text-text-secondary">{stat.label}</p>
                 <p
                   className={`text-2xl font-bold ${
-                    stat.color || "text-gray-900 dark:text-white"
+                    stat.color || "text-text-primary"
                   }`}
                 >
                   {stat.value}
@@ -44,7 +42,7 @@ const StatsGrid: React.FC<StatsGridProps> = ({ stats, columns = 4 }) => {
               </div>
               <div
                 className={`p-2 rounded-lg ${
-                  stat.iconBgColor || "bg-blue-100 dark:bg-blue-900"
+                  stat.iconBgColor || "bg-primary-100"
                 }`}
               >
                 {stat.icon}

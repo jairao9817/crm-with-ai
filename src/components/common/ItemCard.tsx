@@ -52,13 +52,9 @@ const ItemCard: React.FC<ItemCardProps> = ({
           />
         )}
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-            {title}
-          </h3>
+          <h3 className="font-semibold text-text-primary truncate">{title}</h3>
           {subtitle && (
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              {subtitle}
-            </p>
+            <p className="text-sm text-text-secondary mt-1">{subtitle}</p>
           )}
           {chipLabel && (
             <Chip
@@ -80,7 +76,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
           {metadata.map((item, index) => (
             <div
               key={index}
-              className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400"
+              className="flex items-center gap-2 text-sm text-text-secondary"
             >
               <span className="font-medium">{item.label}:</span>
               <span className="truncate">{item.value}</span>
@@ -91,7 +87,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
 
       {/* Content */}
       {content && (
-        <p className="text-gray-600 dark:text-gray-400 text-sm mt-3 line-clamp-2">
+        <p className="text-text-secondary text-sm mt-3 line-clamp-2">
           {content}
         </p>
       )}

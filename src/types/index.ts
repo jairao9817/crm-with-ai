@@ -47,6 +47,7 @@ export interface Deal {
   stage: DealStage;
   monetary_value: number;
   expected_close_date?: string;
+  close_date?: string;
   probability_percentage: number;
   created_at: string;
   updated_at: string;

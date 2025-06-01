@@ -5,9 +5,14 @@ import {
   GlobeAltIcon,
   ShieldCheckIcon,
   CheckCircleIcon,
+  CpuChipIcon,
+  EyeIcon,
+  EyeSlashIcon,
 } from "@heroicons/react/24/outline";
 import { Button } from "../components/ui/Button";
 import { useAuth } from "../context/AuthContext";
+import { SettingsService } from "../services/settingsService";
+import { resetOpenAIClient } from "../services/aiService";
 
 interface NotificationSettings {
   emailNotifications: boolean;
@@ -29,15 +34,39 @@ interface PreferencesSettings {
   currency: string;
 }
 
+interface AISettings {
+  openaiApiKey: string;
+}
+
 const SettingsPage: React.FC = () => {
   const { user } = useAuth();
   const [saveSuccess, setSaveSuccess] = React.useState(false);
+  const [showApiKey, setShowApiKey] = React.useState(false);
+  const [isLoadingSettings, setIsLoadingSettings] = React.useState(true);
+  const [apiKeyTestResult, setApiKeyTestResult] = React.useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
+
+  // AI settings form
+  const {
+    register: registerAI,
+    handleSubmit: handleAISubmit,
+    formState: { isSubmitting: isSubmittingAI },
+    setValue: setAIValue,
+    watch: watchAI,
+  } = useForm<AISettings>({
+    defaultValues: {
+      openaiApiKey: "",
+    },
+  });
 
   // Notification settings form
   const {
     register: registerNotifications,
     handleSubmit: handleNotificationsSubmit,
     formState: { isSubmitting: isSubmittingNotifications },
+    setValue: setNotificationValue,
   } = useForm<NotificationSettings>({
     defaultValues: {
       emailNotifications: true,
@@ -52,6 +81,7 @@ const SettingsPage: React.FC = () => {
     register: registerPrivacy,
     handleSubmit: handlePrivacySubmit,
     formState: { isSubmitting: isSubmittingPrivacy },
+    setValue: setPrivacyValue,
   } = useForm<PrivacySettings>({
     defaultValues: {
       profileVisibility: "private",
@@ -65,6 +95,7 @@ const SettingsPage: React.FC = () => {
     register: registerPreferences,
     handleSubmit: handlePreferencesSubmit,
     formState: { isSubmitting: isSubmittingPreferences },
+    setValue: setPreferencesValue,
   } = useForm<PreferencesSettings>({
     defaultValues: {
       language: "en",
@@ -74,12 +105,131 @@ const SettingsPage: React.FC = () => {
     },
   });
 
+  // Load user settings on component mount
+  React.useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settings = await SettingsService.getUserSettings();
+        if (settings) {
+          // Set AI settings
+          if (settings.openai_api_key) {
+            setAIValue("openaiApiKey", settings.openai_api_key);
+          }
+
+          // Set notification settings
+          if (settings.preferences?.notifications) {
+            const notifications = settings.preferences.notifications;
+            setNotificationValue(
+              "emailNotifications",
+              notifications.emailNotifications
+            );
+            setNotificationValue(
+              "pushNotifications",
+              notifications.pushNotifications
+            );
+            setNotificationValue(
+              "marketingEmails",
+              notifications.marketingEmails
+            );
+            setNotificationValue(
+              "securityAlerts",
+              notifications.securityAlerts
+            );
+          }
+
+          // Set privacy settings
+          if (settings.preferences?.privacy) {
+            const privacy = settings.preferences.privacy;
+            setPrivacyValue("profileVisibility", privacy.profileVisibility);
+            setPrivacyValue("dataSharing", privacy.dataSharing);
+            setPrivacyValue("analyticsTracking", privacy.analyticsTracking);
+          }
+
+          // Set preferences settings
+          if (settings.preferences?.preferences) {
+            const preferences = settings.preferences.preferences;
+            setPreferencesValue("language", preferences.language);
+            setPreferencesValue("timezone", preferences.timezone);
+            setPreferencesValue("dateFormat", preferences.dateFormat);
+            setPreferencesValue("currency", preferences.currency);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load settings:", error);
+      } finally {
+        setIsLoadingSettings(false);
+      }
+    };
+
+    loadSettings();
+  }, [setAIValue, setNotificationValue, setPrivacyValue, setPreferencesValue]);
+
+  const showSuccessMessage = () => {
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 3000);
+  };
+
+  const onAISubmit = async (data: AISettings) => {
+    try {
+      if (data.openaiApiKey.trim()) {
+        await SettingsService.updateOpenAIApiKey(data.openaiApiKey.trim());
+      } else {
+        await SettingsService.deleteOpenAIApiKey();
+      }
+
+      // Reset the OpenAI client so it picks up the new API key
+      resetOpenAIClient();
+
+      showSuccessMessage();
+      setApiKeyTestResult(null);
+    } catch (err) {
+      console.error("Failed to save AI settings:", err);
+    }
+  };
+
+  const testApiKey = async () => {
+    const apiKey = watchAI("openaiApiKey");
+    if (!apiKey?.trim()) {
+      setApiKeyTestResult({
+        success: false,
+        message: "Please enter an API key to test",
+      });
+      return;
+    }
+
+    try {
+      // Test the API key by making a simple request
+      const testClient = new (await import("openai")).default({
+        apiKey: apiKey.trim(),
+        dangerouslyAllowBrowser: true,
+      });
+
+      await testClient.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: "Test" }],
+        max_tokens: 1,
+      });
+
+      setApiKeyTestResult({
+        success: true,
+        message: "API key is valid and working!",
+      });
+    } catch (error: any) {
+      setApiKeyTestResult({
+        success: false,
+        message: error.message || "Invalid API key or connection failed",
+      });
+    }
+  };
+
   const onNotificationsSubmit = async (data: NotificationSettings) => {
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      await SettingsService.updateUserSettings({
+        preferences: {
+          notifications: data,
+        },
+      });
+      showSuccessMessage();
     } catch (err) {
       console.error("Failed to save notification settings:", err);
     }
@@ -87,10 +237,12 @@ const SettingsPage: React.FC = () => {
 
   const onPrivacySubmit = async (data: PrivacySettings) => {
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      await SettingsService.updateUserSettings({
+        preferences: {
+          privacy: data,
+        },
+      });
+      showSuccessMessage();
     } catch (err) {
       console.error("Failed to save privacy settings:", err);
     }
@@ -98,14 +250,32 @@ const SettingsPage: React.FC = () => {
 
   const onPreferencesSubmit = async (data: PreferencesSettings) => {
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      await SettingsService.updateUserSettings({
+        preferences: {
+          preferences: data,
+        },
+      });
+      showSuccessMessage();
     } catch (err) {
       console.error("Failed to save preferences:", err);
     }
   };
+
+  if (isLoadingSettings) {
+    return (
+      <div className="p-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+          <div className="space-y-6">
+            <div className="h-32 bg-gray-200 rounded"></div>
+            <div className="h-32 bg-gray-200 rounded"></div>
+            <div className="h-32 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -130,6 +300,85 @@ const SettingsPage: React.FC = () => {
       )}
 
       <div className="space-y-8">
+        {/* AI Settings */}
+        <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-text-primary mb-2 flex items-center">
+              <CpuChipIcon className="h-5 w-5 mr-2" />
+              AI Configuration
+            </h2>
+            <p className="text-sm text-text-secondary">
+              Configure your OpenAI API key to enable AI features like contact
+              personas, objection handling, and deal coaching.
+            </p>
+          </div>
+
+          <form className="space-y-6" onSubmit={handleAISubmit(onAISubmit)}>
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-2">
+                OpenAI API Key
+              </label>
+              <div className="relative">
+                <input
+                  type={showApiKey ? "text" : "password"}
+                  className="w-full px-3 py-2 pr-20 border border-border rounded-md bg-background text-text-primary focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="sk-..."
+                  {...registerAI("openaiApiKey")}
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-12 flex items-center px-2 text-text-secondary hover:text-text-primary"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                >
+                  {showApiKey ? (
+                    <EyeSlashIcon className="h-4 w-4" />
+                  ) : (
+                    <EyeIcon className="h-4 w-4" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-2 flex items-center px-2 text-primary-600 hover:text-primary-700 text-sm font-medium"
+                  onClick={testApiKey}
+                >
+                  Test
+                </button>
+              </div>
+              <p className="text-sm text-text-secondary mt-1">
+                Your API key is stored securely and only used for AI features.
+                Get your key from{" "}
+                <a
+                  href="https://platform.openai.com/api-keys"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary-600 hover:text-primary-700 underline"
+                >
+                  OpenAI Platform
+                </a>
+              </p>
+
+              {/* API Key Test Result */}
+              {apiKeyTestResult && (
+                <div
+                  className={`mt-2 p-2 rounded text-sm ${
+                    apiKeyTestResult.success
+                      ? "bg-success-50 text-success-700 border border-success-200"
+                      : "bg-error-50 text-error-700 border border-error-200"
+                  }`}
+                >
+                  {apiKeyTestResult.message}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end">
+              <Button type="submit" loading={isSubmittingAI} className="px-6">
+                Save AI Settings
+              </Button>
+            </div>
+          </form>
+        </div>
+
         {/* Notification Settings */}
         <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
           <div className="mb-6">

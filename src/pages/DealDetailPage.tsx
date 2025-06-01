@@ -823,7 +823,6 @@ const DealDetailPage: React.FC = () => {
             tasks,
             communications,
             purchaseHistory,
-            contact: deal.contact,
           }}
         />
       )}
