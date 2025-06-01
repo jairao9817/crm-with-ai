@@ -9,15 +9,17 @@ import {
   ClockIcon,
   XCircleIcon,
   ArrowPathIcon,
+  UserIcon,
+  BriefcaseIcon,
+  CalendarIcon,
 } from "@heroicons/react/24/outline";
 import { PurchaseHistoryService } from "../services/purchaseHistoryService";
 import { ContactService } from "../services/contactService";
 import { DealService } from "../services/dealService";
 import {
-  PageContainer,
+  PageContainerList,
   FormModal,
   FormField,
-  ItemCard,
   usePageData,
   useFormModal,
 } from "../components/common";
@@ -29,7 +31,7 @@ import type {
   Contact,
   Deal,
   PurchaseStatus,
-} from "../types";
+} from "../types/index";
 
 interface PurchaseFormData {
   contact_id: string;
@@ -179,32 +181,113 @@ const PurchaseHistoryPage: React.FC = () => {
   }));
 
   const renderPurchaseItem = (purchase: PurchaseHistory) => (
-    <ItemCard
-      title={purchase.product_service}
-      subtitle={formatCurrency(purchase.amount)}
-      topContent={
-        <div className="flex items-center justify-between mb-4">
-          <div className="p-2 bg-primary-100 dark:bg-primary-900 rounded-lg">
-            <ShoppingCartIcon className="w-5 h-5 text-primary" />
-          </div>
-          <Chip
-            color={getStatusColor(purchase.status)}
-            variant="flat"
-            size="sm"
-            startContent={getStatusIcon(purchase.status)}
+    <div className="flex items-start justify-between group">
+      <div className="flex items-start gap-4 flex-1 min-w-0">
+        <div className="flex-shrink-0 mt-1">
+          <div
+            className={`
+              relative p-3 rounded-xl shadow-sm border-2 transition-all duration-200
+              ${
+                purchase.status === "completed"
+                  ? "bg-success-50 border-success-200 text-success-600 dark:bg-success-900/20 dark:border-success-800/30"
+                  : purchase.status === "pending"
+                  ? "bg-warning-50 border-warning-200 text-warning-600 dark:bg-warning-900/20 dark:border-warning-800/30"
+                  : purchase.status === "refunded"
+                  ? "bg-danger-50 border-danger-200 text-danger-600 dark:bg-danger-900/20 dark:border-danger-800/30"
+                  : "bg-secondary-50 border-secondary-200 text-secondary-600 dark:bg-secondary-900/20 dark:border-secondary-800/30"
+              }
+              group-hover:shadow-md group-hover:scale-105
+            `}
           >
-            {purchase.status}
-          </Chip>
+            <ShoppingCartIcon className="w-5 h-5" />
+            {purchase.status === "pending" && (
+              <div className="absolute inset-0 rounded-xl bg-warning-400 opacity-20 animate-pulse" />
+            )}
+          </div>
         </div>
-      }
-      metadata={[
-        { label: "Customer", value: purchase.contact?.name || "" },
-        ...(purchase.deal
-          ? [{ label: "Deal", value: purchase.deal.title }]
-          : []),
-        { label: "Date", value: formatDate(purchase.date) },
-      ]}
-    />
+        <div className="flex-1 min-w-0 space-y-3">
+          <div className="flex items-start gap-3 flex-wrap">
+            <h3 className="text-lg font-semibold text-text-primary truncate flex-1 min-w-0 group-hover:text-primary-600 transition-colors">
+              {purchase.product_service}
+            </h3>
+            <div className="flex-shrink-0">
+              <div
+                className={`
+                  inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium shadow-sm border
+                  ${
+                    purchase.status === "completed"
+                      ? "bg-success-100 text-success-700 border-success-200 dark:bg-success-900/30 dark:text-success-300 dark:border-success-700/30"
+                      : purchase.status === "pending"
+                      ? "bg-warning-100 text-warning-700 border-warning-200 dark:bg-warning-900/30 dark:text-warning-300 dark:border-warning-700/30"
+                      : purchase.status === "refunded"
+                      ? "bg-danger-100 text-danger-700 border-danger-200 dark:bg-danger-900/30 dark:text-danger-300 dark:border-danger-700/30"
+                      : "bg-secondary-100 text-secondary-700 border-secondary-200 dark:bg-secondary-900/30 dark:text-secondary-300 dark:border-secondary-700/30"
+                  }
+                `}
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-current" />
+                {purchase.status.charAt(0).toUpperCase() +
+                  purchase.status.slice(1)}
+              </div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-r from-success-50 to-emerald-50 dark:from-success-900/20 dark:to-emerald-900/20 rounded-lg p-4 border border-success-200/50 dark:border-success-800/30">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-success-100 dark:bg-success-900/30">
+                <CurrencyDollarIcon className="w-5 h-5 text-success-600 dark:text-success-400" />
+              </div>
+              <div>
+                <p className="text-xs text-success-600 dark:text-success-400 font-medium uppercase tracking-wide">
+                  Purchase Amount
+                </p>
+                <p className="text-2xl font-bold text-success-700 dark:text-success-300">
+                  {formatCurrency(purchase.amount)}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-6 text-xs">
+            <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-background-secondary text-text-secondary hover:bg-background-tertiary transition-colors">
+              <UserIcon className="w-3.5 h-3.5" />
+              <span className="font-medium truncate max-w-32">
+                {purchase.contact?.name || "Unknown Contact"}
+              </span>
+            </div>
+
+            {purchase.deal && (
+              <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400">
+                <BriefcaseIcon className="w-3.5 h-3.5" />
+                <span className="font-medium truncate max-w-32">
+                  {purchase.deal.title}
+                </span>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 text-text-tertiary">
+              <CalendarIcon className="w-3.5 h-3.5" />
+              <span>{formatDate(purchase.date)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="flex-shrink-0 ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <div className="p-2 rounded-lg bg-background-secondary text-text-tertiary hover:bg-background-tertiary hover:text-text-primary transition-colors">
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </div>
+      </div>
+    </div>
   );
 
   const filtersContent = (
@@ -251,7 +334,7 @@ const PurchaseHistoryPage: React.FC = () => {
   );
 
   return (
-    <PageContainer
+    <PageContainerList
       title="Purchase History"
       subtitle="Track customer purchases and revenue"
       actionLabel="Add Purchase"
@@ -335,7 +418,7 @@ const PurchaseHistoryPage: React.FC = () => {
           options={PURCHASE_STATUSES}
         />
       </FormModal>
-    </PageContainer>
+    </PageContainerList>
   );
 };
 

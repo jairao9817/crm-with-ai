@@ -17,14 +17,26 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   onAction,
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-      <div>
-        <h1 className="text-2xl font-bold text-text-primary">{title}</h1>
-        <p className="text-text-secondary">{subtitle}</p>
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+      <div className="space-y-2">
+        <h1 className="text-4xl font-bold text-text-primary tracking-tight">
+          {title}
+        </h1>
+        <p className="text-lg text-text-secondary leading-relaxed max-w-2xl">
+          {subtitle}
+        </p>
       </div>
-      <Button color="primary" startContent={actionIcon} onPress={onAction}>
-        {actionLabel}
-      </Button>
+      <div className="flex-shrink-0">
+        <Button
+          color="primary"
+          startContent={actionIcon}
+          onPress={onAction}
+          size="lg"
+          className="shadow-lg hover:shadow-xl transition-all duration-200 font-semibold px-8"
+        >
+          {actionLabel}
+        </Button>
+      </div>
     </div>
   );
 };

@@ -27,25 +27,35 @@ const StatsGrid: React.FC<StatsGridProps> = ({ stats, columns = 4 }) => {
   return (
     <div className={`grid ${gridCols[columns as keyof typeof gridCols]} gap-6`}>
       {stats.map((stat, index) => (
-        <Card key={index}>
+        <Card
+          key={index}
+          className="shadow-lg hover:shadow-xl transition-all duration-300 border border-border bg-surface group hover:scale-105"
+        >
           <CardBody className="p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-text-secondary">{stat.label}</p>
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-text-secondary uppercase tracking-wide">
+                  {stat.label}
+                </p>
                 <p
-                  className={`text-2xl font-bold ${
+                  className={`text-3xl font-bold transition-colors duration-200 ${
                     stat.color || "text-text-primary"
-                  }`}
+                  } group-hover:scale-105`}
                 >
-                  {stat.value}
+                  {typeof stat.value === "number" && stat.value >= 1000
+                    ? stat.value.toLocaleString()
+                    : stat.value}
                 </p>
               </div>
               <div
-                className={`p-2 rounded-lg ${
-                  stat.iconBgColor || "bg-primary-100"
-                }`}
+                className={`
+                  p-3 rounded-xl shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:scale-110
+                  ${stat.iconBgColor || "bg-primary-100 dark:bg-primary-900/20"}
+                `}
               >
-                {stat.icon}
+                <div className="w-6 h-6 flex items-center justify-center">
+                  {stat.icon}
+                </div>
               </div>
             </div>
           </CardBody>

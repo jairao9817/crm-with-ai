@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Input, Button } from "@heroui/react";
+import { Input, Button, Chip } from "@heroui/react";
 import {
   PlusIcon,
   PhoneIcon,
@@ -9,15 +9,17 @@ import {
   DocumentTextIcon,
   ChatBubbleLeftRightIcon,
   ExclamationTriangleIcon,
+  UserIcon,
+  BriefcaseIcon,
+  ClockIcon,
 } from "@heroicons/react/24/outline";
 import { CommunicationService } from "../services/communicationService";
 import { ContactService } from "../services/contactService";
 import { DealService } from "../services/dealService";
 import {
-  PageContainer,
+  PageContainerList,
   FormModal,
   FormField,
-  ItemCard,
   usePageData,
   useFormModal,
 } from "../components/common";
@@ -177,27 +179,103 @@ const CommunicationsPage: React.FC = () => {
   }));
 
   const renderCommunicationItem = (communication: Communication) => (
-    <ItemCard
-      title={
-        communication.subject ||
-        `${communication.type.replace("_", " ")} Communication`
-      }
-      icon={getTypeIcon(communication.type)}
-      chipLabel={communication.type.replace("_", " ")}
-      chipColor={getTypeColor(communication.type)}
-      chipIcon={getTypeIcon(communication.type)}
-      avatarColor={`bg-${getTypeColor(
-        communication.type
-      )}-100 text-${getTypeColor(communication.type)}`}
-      metadata={[
-        { label: "Contact", value: communication.contact?.name || "" },
-        ...(communication.deal
-          ? [{ label: "Deal", value: communication.deal.title }]
-          : []),
-        { label: "Date", value: formatDate(communication.communication_date) },
-      ]}
-      content={communication.content}
-    />
+    <div className="flex items-start justify-between group">
+      <div className="flex items-start gap-4 flex-1 min-w-0">
+        <div className="flex-shrink-0 mt-1">
+          <div
+            className={`
+              relative p-3 rounded-xl shadow-sm border-2 transition-all duration-200
+              ${
+                communication.type === "phone_call"
+                  ? "bg-primary-50 border-primary-200 text-primary-600 dark:bg-primary-900/20 dark:border-primary-800/30"
+                  : communication.type === "email"
+                  ? "bg-secondary-50 border-secondary-200 text-secondary-600 dark:bg-secondary-900/20 dark:border-secondary-800/30"
+                  : communication.type === "meeting"
+                  ? "bg-success-50 border-success-200 text-success-600 dark:bg-success-900/20 dark:border-success-800/30"
+                  : "bg-warning-50 border-warning-200 text-warning-600 dark:bg-warning-900/20 dark:border-warning-800/30"
+              }
+              group-hover:shadow-md group-hover:scale-105
+            `}
+          >
+            {getTypeIcon(communication.type)}
+          </div>
+        </div>
+        <div className="flex-1 min-w-0 space-y-3">
+          <div className="flex items-start gap-3 flex-wrap">
+            <h3 className="text-lg font-semibold text-text-primary truncate flex-1 min-w-0 group-hover:text-primary-600 transition-colors">
+              {communication.subject ||
+                `${communication.type.replace("_", " ")} Communication`}
+            </h3>
+            <div className="flex-shrink-0">
+              <div
+                className={`
+                  inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium shadow-sm border
+                  ${
+                    communication.type === "phone_call"
+                      ? "bg-primary-100 text-primary-700 border-primary-200 dark:bg-primary-900/30 dark:text-primary-300 dark:border-primary-700/30"
+                      : communication.type === "email"
+                      ? "bg-secondary-100 text-secondary-700 border-secondary-200 dark:bg-secondary-900/30 dark:text-secondary-300 dark:border-secondary-700/30"
+                      : communication.type === "meeting"
+                      ? "bg-success-100 text-success-700 border-success-200 dark:bg-success-900/30 dark:text-success-300 dark:border-success-700/30"
+                      : "bg-warning-100 text-warning-700 border-warning-200 dark:bg-warning-900/30 dark:text-warning-300 dark:border-warning-700/30"
+                  }
+                `}
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-current" />
+                {communication.type.replace("_", " ").charAt(0).toUpperCase() +
+                  communication.type.replace("_", " ").slice(1)}
+              </div>
+            </div>
+          </div>
+          {communication.content && (
+            <div className="bg-background-secondary/50 rounded-lg p-3 border border-border/50">
+              <p className="text-sm text-text-secondary leading-relaxed line-clamp-3">
+                {communication.content}
+              </p>
+            </div>
+          )}
+          <div className="flex items-center gap-6 text-xs">
+            <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-background-secondary text-text-secondary hover:bg-background-tertiary transition-colors">
+              <UserIcon className="w-3.5 h-3.5" />
+              <span className="font-medium truncate max-w-32">
+                {communication.contact?.name || "Unknown Contact"}
+              </span>
+            </div>
+
+            {communication.deal && (
+              <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400">
+                <BriefcaseIcon className="w-3.5 h-3.5" />
+                <span className="font-medium truncate max-w-32">
+                  {communication.deal.title}
+                </span>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 text-text-tertiary">
+              <CalendarIcon className="w-3.5 h-3.5" />
+              <span>{formatDate(communication.communication_date)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="flex-shrink-0 ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <div className="p-2 rounded-lg bg-background-secondary text-text-tertiary hover:bg-background-tertiary hover:text-text-primary transition-colors">
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </div>
+      </div>
+    </div>
   );
 
   const filtersContent = (
@@ -245,7 +323,7 @@ const CommunicationsPage: React.FC = () => {
 
   return (
     <>
-      <PageContainer
+      <PageContainerList
         title="Communications"
         subtitle="Track and manage customer communications"
         actionLabel="Log Communication"
@@ -339,7 +417,7 @@ const CommunicationsPage: React.FC = () => {
             }
           }
         />
-      </PageContainer>
+      </PageContainerList>
 
       {/* Handle Objection Button - Positioned as a floating action */}
       <div className="fixed bottom-6 right-6 z-50">
