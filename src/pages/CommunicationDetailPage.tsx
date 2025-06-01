@@ -34,6 +34,7 @@ import DetailCard from "../components/DetailCard";
 import SidebarActions from "../components/SidebarActions";
 import ContactCard from "../components/ContactCard";
 import DealCard from "../components/DealCard";
+import CommunicationNotes from "../components/CommunicationNotes";
 import type {
   Communication,
   UpdateCommunicationInput,
@@ -68,7 +69,7 @@ const CommunicationDetailPage: React.FC = () => {
     navigate,
   } = useDetailPage<Communication>({
     id,
-    loadItem: CommunicationService.getCommunication,
+    loadItem: CommunicationService.getCommunicationWithNotes,
     updateItem: async (id: string, data: UpdateCommunicationInput) => {
       await CommunicationService.updateCommunication(id, data);
     },
@@ -76,6 +77,19 @@ const CommunicationDetailPage: React.FC = () => {
     redirectPath: "/communications",
     itemName: "communication",
   });
+
+  // Custom refresh function for communication with notes
+  const refreshCommunication = async () => {
+    if (!id) return;
+    try {
+      const updatedCommunication =
+        await CommunicationService.getCommunicationWithNotes(id);
+      // Force a re-render by reloading the page (temporary solution)
+      window.location.reload();
+    } catch (error) {
+      console.error("Failed to refresh communication:", error);
+    }
+  };
 
   const {
     control,
@@ -296,6 +310,13 @@ const CommunicationDetailPage: React.FC = () => {
             }
             iconBgColor="bg-blue-100 dark:bg-blue-900/20"
             items={timelineItems}
+          />
+
+          {/* Communication Notes */}
+          <CommunicationNotes
+            communicationId={communication.id}
+            notes={communication.notes || []}
+            onNotesChange={refreshCommunication}
           />
         </div>
 

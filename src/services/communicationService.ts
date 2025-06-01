@@ -5,6 +5,7 @@ import type {
   UpdateCommunicationInput,
   CommunicationFilters,
 } from "../types";
+import { CommunicationNotesService } from "./communicationNotesService";
 
 export class CommunicationService {
   // Get all communications for the current user
@@ -102,6 +103,25 @@ export class CommunicationService {
     }
 
     return data;
+  }
+
+  // Get a single communication by ID with notes
+  static async getCommunicationWithNotes(
+    id: string
+  ): Promise<Communication | null> {
+    const communication = await CommunicationService.getCommunication(id);
+
+    if (!communication) {
+      return null;
+    }
+
+    // Fetch notes for this communication
+    const notes = await CommunicationNotesService.getNotesByCommunication(id);
+
+    return {
+      ...communication,
+      notes,
+    };
   }
 
   // Create a new communication

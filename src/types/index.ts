@@ -124,6 +124,7 @@ export interface Communication {
   // Joined data
   contact?: Contact;
   deal?: Deal;
+  notes?: CommunicationNote[];
 }
 
 export interface CreateCommunicationInput {
@@ -142,6 +143,34 @@ export interface UpdateCommunicationInput {
   subject?: string;
   content?: string;
   communication_date?: string;
+}
+
+// Communication Notes types
+export type CommunicationNoteType =
+  | "reply"
+  | "follow_up"
+  | "general"
+  | "important";
+
+export interface CommunicationNote {
+  id: string;
+  communication_id: string;
+  note_content: string;
+  note_type: CommunicationNoteType;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateCommunicationNoteInput {
+  communication_id: string;
+  note_content: string;
+  note_type?: CommunicationNoteType;
+}
+
+export interface UpdateCommunicationNoteInput {
+  note_content?: string;
+  note_type?: CommunicationNoteType;
 }
 
 // Purchase History types
