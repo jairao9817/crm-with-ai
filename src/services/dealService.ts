@@ -5,6 +5,9 @@ import type {
   UpdateDealInput,
   DealFilters,
   DealStage,
+  Task,
+  Communication,
+  PurchaseHistory,
 } from "../types";
 
 export class DealService {
@@ -309,5 +312,67 @@ export class DealService {
     });
 
     return stats;
+  }
+
+  // AI Deal Coach: Get AI-generated next steps for a deal
+  static async getAIDealCoachSuggestions(
+    deal: Deal,
+    context: {
+      tasks?: Task[];
+      communications?: Communication[];
+      purchaseHistory?: PurchaseHistory[];
+    }
+  ): Promise<string> {
+    // Prepare prompt for OpenAI
+    const prompt = `You are a sales deal coach. Given the following deal information, suggest the next best steps to improve the probability of closing the deal.\n\nDeal:\n${JSON.stringify(
+      deal,
+      null,
+      2
+    )}\n\nTasks:\n${JSON.stringify(
+      context.tasks || [],
+      null,
+      2
+    )}\n\nCommunications:\n${JSON.stringify(
+      context.communications || [],
+      null,
+      2
+    )}\n\nPurchase History:\n${JSON.stringify(
+      context.purchaseHistory || [],
+      null,
+      2
+    )}\n\nRespond with a concise, actionable list of next steps for the sales rep.`;
+
+    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error("Missing OpenAI API key (VITE_OPENAI_API_KEY)");
+    }
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "You are a helpful sales deal coach AI." },
+          { role: "user", content: prompt },
+        ],
+        max_tokens: 30,
+        temperature: 0.7,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`OpenAI API error: ${error}`);
+    }
+
+    const data = await response.json();
+    // This assumes OpenAI's response format for chat completions
+    return (
+      data.choices?.[0]?.message?.content?.trim() || "No suggestions returned."
+    );
   }
 }

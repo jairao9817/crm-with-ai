@@ -246,3 +246,5 @@ export interface PurchaseHistoryFilters {
   date_to?: string;
   search?: string;
 }
+
+export type { Task, Communication, PurchaseHistory };

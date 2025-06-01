@@ -34,6 +34,7 @@ import { useDealRelatedData } from "../hooks/useDealRelatedData";
 import { DealForm } from "../components/DealForm";
 import { DealCloseModal } from "../components/DealCloseModal";
 import type { DealStage } from "../types";
+import { DealService } from "../services/dealService";
 
 const stageConfig: Record<
   DealStage,
@@ -86,6 +87,13 @@ const DealDetailPage: React.FC = () => {
     onClose: onCloseModalClose,
   } = useDisclosure();
 
+  const [isAICoachOpen, setAICoachOpen] = useState(false);
+  const [aiCoachLoading, setAICoachLoading] = useState(false);
+  const [aiCoachError, setAICoachError] = useState<string | null>(null);
+  const [aiCoachSuggestions, setAICoachSuggestions] = useState<string | null>(
+    null
+  );
+
   const handleFormSuccess = () => {
     onEditClose();
     refresh();
@@ -104,6 +112,31 @@ const DealDetailPage: React.FC = () => {
       deal.monetary_value > 0
     ) {
       onCloseModalOpen();
+    }
+  };
+
+  const handleOpenAICoach = () => {
+    setAICoachOpen(true);
+    setAICoachLoading(false);
+    setAICoachError(null);
+    setAICoachSuggestions(null);
+  };
+
+  const handleGenerateAICoach = async () => {
+    setAICoachLoading(true);
+    setAICoachError(null);
+    setAICoachSuggestions(null);
+    try {
+      const suggestions = await DealService.getAIDealCoachSuggestions(deal, {
+        tasks,
+        communications,
+        purchaseHistory,
+      });
+      setAICoachSuggestions(suggestions);
+    } catch (err: any) {
+      setAICoachError(err.message || "Failed to get AI suggestions.");
+    } finally {
+      setAICoachLoading(false);
     }
   };
 
@@ -232,6 +265,15 @@ const DealDetailPage: React.FC = () => {
           </div>
         </div>
         <div className="flex gap-2">
+          {/* AI Deal Coach Button */}
+          <Button
+            color="secondary"
+            startContent={<ChatBubbleLeftRightIcon className="w-4 h-4" />}
+            onPress={handleOpenAICoach}
+            variant="bordered"
+          >
+            AI Deal Coach
+          </Button>
           {deal.stage !== "closed-won" &&
             deal.contact_id &&
             deal.monetary_value > 0 && (
@@ -697,6 +739,45 @@ const DealDetailPage: React.FC = () => {
           onSuccess={handleCloseSuccess}
         />
       )}
+
+      {/* AI Deal Coach Modal */}
+      <Modal
+        isOpen={isAICoachOpen}
+        onClose={() => setAICoachOpen(false)}
+        size="2xl"
+      >
+        <ModalContent>
+          <ModalHeader>
+            AI Deal Coach{" "}
+            <span className="ml-2 text-xs text-warning">AI-generated</span>
+          </ModalHeader>
+          <ModalBody>
+            {!aiCoachSuggestions && !aiCoachLoading && !aiCoachError && (
+              <Button
+                color="secondary"
+                onPress={handleGenerateAICoach}
+                startContent={<ChatBubbleLeftRightIcon className="w-4 h-4" />}
+              >
+                Generate Suggestions
+              </Button>
+            )}
+            {aiCoachLoading && (
+              <div className="flex justify-center items-center py-8">
+                <Spinner />
+                <span className="ml-3">Getting suggestions...</span>
+              </div>
+            )}
+            {aiCoachError && (
+              <div className="text-danger-600 py-4">{aiCoachError}</div>
+            )}
+            {aiCoachSuggestions && (
+              <div className="whitespace-pre-line text-text-primary text-base">
+                {aiCoachSuggestions}
+              </div>
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </div>
   );
 };
