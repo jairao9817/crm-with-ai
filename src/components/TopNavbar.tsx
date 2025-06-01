@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ThemeToggle } from "./ThemeToggle";
 import { DropdownMenu } from "./ui/DropdownMenu";
+import { NotificationDropdown } from "./ui/NotificationDropdown";
 import type { DropdownMenuItem } from "./ui/DropdownMenu";
 import {
   UserIcon,
@@ -72,8 +73,11 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             </div>
           </div>
 
-          {/* Right side - Theme toggle and profile dropdown */}
-          <div className="flex items-center space-x-4">
+          {/* Right side - Notifications, Theme toggle and profile dropdown */}
+          <div className="flex items-center space-x-2">
+            {/* Notifications */}
+            <NotificationDropdown />
+
             {/* Theme Toggle */}
             <div className="hidden sm:block">
               <ThemeToggle showLabel={false} />

@@ -11,19 +11,13 @@ import {
   ArrowPathIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
-import {
-  MetricCard,
-  PipelineOverview,
-  RecentActivity,
-  RevenueChart,
-} from "../components/ui";
+import { MetricCard, PipelineOverview, RevenueChart } from "../components/ui";
 import { useDashboard } from "../hooks/useDashboard";
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const {
     metrics,
-    recentActivity,
     pipelineOverview,
     revenueTrends,
     loading,
@@ -152,37 +146,22 @@ const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Dashboard Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Pipeline Overview - Takes 2 columns */}
-        <div className="lg:col-span-2">
-          <PipelineOverview
-            data={
-              pipelineOverview || {
-                lead: { count: 0, value: 0 },
-                prospect: { count: 0, value: 0 },
-                negotiation: { count: 0, value: 0 },
-                "closed-won": { count: 0, value: 0 },
-                "closed-lost": { count: 0, value: 0 },
-              }
-            }
-            loading={loading.pipeline}
-          />
-        </div>
-
-        {/* Recent Activity - Takes 1 column */}
-        <div>
-          <RecentActivity
-            activities={recentActivity}
-            loading={loading.activity}
-          />
-        </div>
-      </div>
+      {/* Pipeline Overview - Now takes full width */}
+      <PipelineOverview
+        data={
+          pipelineOverview || {
+            lead: { count: 0, value: 0 },
+            prospect: { count: 0, value: 0 },
+            negotiation: { count: 0, value: 0 },
+            "closed-won": { count: 0, value: 0 },
+            "closed-lost": { count: 0, value: 0 },
+          }
+        }
+        loading={loading.pipeline}
+      />
 
       {/* Revenue Chart */}
-      <div>
-        <RevenueChart data={revenueTrends} loading={loading.revenue} />
-      </div>
+      <RevenueChart data={revenueTrends} loading={loading.revenue} />
 
       {/* Additional Metrics Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
