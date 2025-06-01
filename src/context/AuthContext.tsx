@@ -98,7 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const resetPassword = async (email: string) => {
-    const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+    const baseUrl = import.meta.env.VITE_APP_URL || "http://localhost:5173";
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${baseUrl}/reset-password`,
     });

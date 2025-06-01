@@ -1,5 +1,7 @@
 # CRM with AI - Customer Relationship Management System
 
+- https://melodic-mochi-f9e8c0.netlify.app/
+
 A modern, AI-powered CRM application built with React, TypeScript, and Supabase. This comprehensive system helps sales teams manage contacts, deals, tasks, and communications while providing intelligent insights through advanced AI-powered features.
 
 ## 🚀 Current Features
