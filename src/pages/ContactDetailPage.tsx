@@ -28,6 +28,7 @@ import {
 import { useContact } from "../hooks/useContacts";
 import { useContactRelatedData } from "../hooks/useContactRelatedData";
 import { ContactForm } from "../components/ContactForm";
+import { PersonaGenerator } from "../components/PersonaGenerator";
 
 const ContactDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -496,6 +497,17 @@ const ContactDetailPage: React.FC = () => {
                 )}
               </CardBody>
             </Card>
+          </div>
+        </Tab>
+
+        <Tab key="ai-persona" title="AI Persona">
+          <div className="mt-6">
+            <PersonaGenerator
+              contact={contact}
+              deals={deals}
+              communications={communications}
+              purchaseHistory={purchaseHistory}
+            />
           </div>
         </Tab>
       </Tabs>

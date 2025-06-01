@@ -36,7 +36,7 @@ Where:
 
 Implementation Steps:
 - Add a "Generate Persona" button/section in ContactDetailPage.tsx.
-- Aggregate the contact's history (from communications, deals, etc.).
+- Aggregate the contact's history (from communications, deals, notes etc.).
 - Send the data to OpenAI API and display the persona.
 - Optionally, store personas in a vector DB for similarity search.
 

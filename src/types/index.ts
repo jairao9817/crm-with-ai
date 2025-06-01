@@ -247,4 +247,24 @@ export interface PurchaseHistoryFilters {
   search?: string;
 }
 
-export type { Task, Communication, PurchaseHistory };
+// AI Persona types
+export interface ContactPersona {
+  id: string;
+  contact_id: string;
+  persona_summary: string;
+  behavioral_traits: string[];
+  communication_preferences: string[];
+  buying_patterns: string[];
+  generated_at: string;
+  created_by: string;
+}
+
+export interface GeneratePersonaInput {
+  contact_id: string;
+  contact_data: {
+    contact: Contact;
+    deals: Deal[];
+    communications: Communication[];
+    purchaseHistory: PurchaseHistory[];
+  };
+}
