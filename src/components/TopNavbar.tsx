@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ThemeToggle } from "./ThemeToggle";
 import { DropdownMenu } from "./ui/DropdownMenu";
@@ -23,20 +23,29 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   showMobileMenuButton = true,
 }) => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     await signOut();
   };
 
+  const handleProfileClick = () => {
+    navigate("/profile");
+  };
+
+  const handleSettingsClick = () => {
+    navigate("/settings");
+  };
+
   const profileMenuItems: DropdownMenuItem[] = [
     {
       label: "Profile",
-      href: "/profile",
+      onClick: handleProfileClick,
       icon: <UserIcon className="h-4 w-4" />,
     },
     {
       label: "Settings",
-      href: "/settings",
+      onClick: handleSettingsClick,
       icon: <Cog6ToothIcon className="h-4 w-4" />,
     },
     {
