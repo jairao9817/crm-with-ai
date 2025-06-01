@@ -93,11 +93,24 @@ export const DealCloseModal: React.FC<DealCloseModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="lg"
+      classNames={{
+        backdrop: "bg-black/50 backdrop-blur-sm",
+        base: "bg-surface border border-border",
+        header: "border-b border-border",
+        body: "py-6",
+        footer: "border-t border-border",
+      }}
+    >
       <ModalContent>
         <ModalHeader className="flex flex-col gap-1">
-          <h2 className="text-xl font-semibold">Close Deal as Won</h2>
-          <p className="text-sm text-gray-500">
+          <h2 className="text-xl font-semibold text-text-primary">
+            Close Deal as Won
+          </h2>
+          <p className="text-sm text-text-secondary">
             Deal "{deal.title}" will be closed as won. Create a purchase history
             record:
           </p>
@@ -126,6 +139,14 @@ export const DealCloseModal: React.FC<DealCloseModalProps> = ({
                   description={`Deal value: ${formatCurrency(
                     deal.monetary_value
                   )}`}
+                  classNames={{
+                    input:
+                      "bg-transparent text-text-primary placeholder:text-text-tertiary",
+                    inputWrapper:
+                      "bg-background-secondary border-border hover:border-border-focus",
+                    label: "text-text-primary",
+                    description: "text-text-secondary",
+                  }}
                 />
               )}
             />
@@ -141,6 +162,13 @@ export const DealCloseModal: React.FC<DealCloseModalProps> = ({
                   placeholder="Enter product or service name"
                   isInvalid={!!errors.product_service}
                   errorMessage={errors.product_service?.message}
+                  classNames={{
+                    input:
+                      "bg-transparent text-text-primary placeholder:text-text-tertiary",
+                    inputWrapper:
+                      "bg-background-secondary border-border hover:border-border-focus",
+                    label: "text-text-primary",
+                  }}
                 />
               )}
             />
@@ -156,6 +184,13 @@ export const DealCloseModal: React.FC<DealCloseModalProps> = ({
                   label="Purchase Date"
                   isInvalid={!!errors.date}
                   errorMessage={errors.date?.message}
+                  classNames={{
+                    input:
+                      "bg-transparent text-text-primary placeholder:text-text-tertiary",
+                    inputWrapper:
+                      "bg-background-secondary border-border hover:border-border-focus",
+                    label: "text-text-primary",
+                  }}
                 />
               )}
             />
@@ -172,24 +207,40 @@ export const DealCloseModal: React.FC<DealCloseModalProps> = ({
                   onSelectionChange={(keys) =>
                     field.onChange(Array.from(keys)[0] as PurchaseStatus)
                   }
+                  classNames={{
+                    trigger:
+                      "bg-background-secondary border-border hover:border-border-focus",
+                    value: "text-text-primary",
+                    label: "text-text-primary",
+                    popoverContent: "bg-surface border border-border",
+                  }}
                 >
-                  <SelectItem key="completed">Completed</SelectItem>
-                  <SelectItem key="pending">Pending</SelectItem>
-                  <SelectItem key="refunded">Refunded</SelectItem>
-                  <SelectItem key="cancelled">Cancelled</SelectItem>
+                  <SelectItem key="completed" className="text-text-primary">
+                    Completed
+                  </SelectItem>
+                  <SelectItem key="pending" className="text-text-primary">
+                    Pending
+                  </SelectItem>
+                  <SelectItem key="refunded" className="text-text-primary">
+                    Refunded
+                  </SelectItem>
+                  <SelectItem key="cancelled" className="text-text-primary">
+                    Cancelled
+                  </SelectItem>
                 </Select>
               )}
             />
 
             {deal.contact && (
-              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <strong>Customer:</strong> {deal.contact.name} (
-                  {deal.contact.email})
+              <div className="p-3 bg-background-secondary border border-border rounded-lg">
+                <p className="text-sm text-text-secondary">
+                  <strong className="text-text-primary">Customer:</strong>{" "}
+                  {deal.contact.name} ({deal.contact.email})
                 </p>
                 {deal.contact.company && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    <strong>Company:</strong> {deal.contact.company}
+                  <p className="text-sm text-text-secondary">
+                    <strong className="text-text-primary">Company:</strong>{" "}
+                    {deal.contact.company}
                   </p>
                 )}
               </div>
@@ -197,7 +248,11 @@ export const DealCloseModal: React.FC<DealCloseModalProps> = ({
           </ModalBody>
 
           <ModalFooter className="flex justify-between">
-            <Button variant="light" onPress={onClose}>
+            <Button
+              variant="light"
+              onPress={onClose}
+              className="text-text-secondary hover:text-text-primary hover:bg-background-secondary"
+            >
               Cancel
             </Button>
             <div className="flex gap-2">
@@ -205,10 +260,16 @@ export const DealCloseModal: React.FC<DealCloseModalProps> = ({
                 variant="flat"
                 onPress={handleSkipPurchase}
                 isDisabled={isSubmitting}
+                className="bg-background-secondary text-text-primary hover:bg-background-tertiary border border-border"
               >
                 Close Deal Only
               </Button>
-              <Button color="primary" type="submit" isLoading={isSubmitting}>
+              <Button
+                color="primary"
+                type="submit"
+                isLoading={isSubmitting}
+                className="bg-primary-500 hover:bg-primary-600 text-white"
+              >
                 Close Deal & Create Purchase
               </Button>
             </div>

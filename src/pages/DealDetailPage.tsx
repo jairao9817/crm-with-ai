@@ -956,9 +956,9 @@ const DealDetailPage: React.FC = () => {
 
                   {aiCoachSuggestions && (
                     <div className="space-y-4">
-                      <div className="p-4 rounded-lg bg-success-50 border border-success-200">
+                      <div className="p-4 rounded-lg bg-success-50 border border-success-200 dark:bg-success-900/20 dark:border-success-800/30">
                         <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-semibold text-success-800">
+                          <h4 className="font-semibold text-success-800 dark:text-success-200">
                             AI Recommendations
                           </h4>
                           <div className="flex items-center gap-2">
@@ -995,7 +995,7 @@ const DealDetailPage: React.FC = () => {
                           </div>
                         </div>
                         <div className="prose prose-sm max-w-none">
-                          <div className="whitespace-pre-line text-text-primary text-base leading-relaxed">
+                          <div className="whitespace-pre-line text-success-900 dark:text-success-100 text-base leading-relaxed">
                             {aiCoachSuggestions}
                           </div>
                         </div>
@@ -1073,7 +1073,7 @@ const DealDetailPage: React.FC = () => {
                           </CardHeader>
                           <CardBody className="pt-0">
                             <div className="prose prose-sm max-w-none">
-                              <div className="whitespace-pre-line text-text-secondary text-sm leading-relaxed">
+                              <div className="whitespace-pre-line text-text-primary text-sm leading-relaxed">
                                 {suggestion.suggestions}
                               </div>
                             </div>

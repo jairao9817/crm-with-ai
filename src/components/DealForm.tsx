@@ -165,6 +165,13 @@ export const DealForm: React.FC<DealFormProps> = ({
         isRequired
         isInvalid={!!errors.title}
         errorMessage={errors.title?.message}
+        classNames={{
+          input:
+            "bg-transparent text-text-primary placeholder:text-text-tertiary",
+          inputWrapper:
+            "bg-background-secondary border-border hover:border-border-focus",
+          label: "text-text-primary",
+        }}
         {...register("title")}
       />
 
@@ -179,13 +186,23 @@ export const DealForm: React.FC<DealFormProps> = ({
         }}
         isInvalid={!!errors.contact_id}
         errorMessage={errors.contact_id?.message}
+        classNames={{
+          trigger:
+            "bg-background-secondary border-border hover:border-border-focus",
+          value: "text-text-primary",
+          label: "text-text-primary",
+          popoverContent: "bg-surface border border-border",
+        }}
       >
         {[
-          <SelectItem key="">No contact selected</SelectItem>,
+          <SelectItem key="" className="text-text-secondary">
+            No contact selected
+          </SelectItem>,
           ...contacts.map((contact) => (
             <SelectItem
               key={contact.id}
               textValue={`${contact.name} (${contact.email})`}
+              className="text-text-primary"
             >
               {contact.name} ({contact.email})
             </SelectItem>
@@ -204,9 +221,18 @@ export const DealForm: React.FC<DealFormProps> = ({
         }}
         isInvalid={!!errors.stage}
         errorMessage={errors.stage?.message}
+        classNames={{
+          trigger:
+            "bg-background-secondary border-border hover:border-border-focus",
+          value: "text-text-primary",
+          label: "text-text-primary",
+          popoverContent: "bg-surface border border-border",
+        }}
       >
         {stageOptions.map((option) => (
-          <SelectItem key={option.key}>{option.label}</SelectItem>
+          <SelectItem key={option.key} className="text-text-primary">
+            {option.label}
+          </SelectItem>
         ))}
       </Select>
 
@@ -219,11 +245,18 @@ export const DealForm: React.FC<DealFormProps> = ({
         min="0"
         startContent={
           <div className="pointer-events-none flex items-center">
-            <span className="text-default-400 text-small">$</span>
+            <span className="text-text-tertiary text-small">$</span>
           </div>
         }
         isInvalid={!!errors.monetary_value}
         errorMessage={errors.monetary_value?.message}
+        classNames={{
+          input:
+            "bg-transparent text-text-primary placeholder:text-text-tertiary",
+          inputWrapper:
+            "bg-background-secondary border-border hover:border-border-focus",
+          label: "text-text-primary",
+        }}
         {...register("monetary_value", { valueAsNumber: true })}
       />
 
@@ -234,6 +267,13 @@ export const DealForm: React.FC<DealFormProps> = ({
         type="date"
         isInvalid={!!errors.expected_close_date}
         errorMessage={errors.expected_close_date?.message}
+        classNames={{
+          input:
+            "bg-transparent text-text-primary placeholder:text-text-tertiary",
+          inputWrapper:
+            "bg-background-secondary border-border hover:border-border-focus",
+          label: "text-text-primary",
+        }}
         {...register("expected_close_date")}
       />
 
@@ -246,29 +286,48 @@ export const DealForm: React.FC<DealFormProps> = ({
         max="100"
         endContent={
           <div className="pointer-events-none flex items-center">
-            <span className="text-default-400 text-small">%</span>
+            <span className="text-text-tertiary text-small">%</span>
           </div>
         }
         isInvalid={!!errors.probability_percentage}
         errorMessage={errors.probability_percentage?.message}
+        classNames={{
+          input:
+            "bg-transparent text-text-primary placeholder:text-text-tertiary",
+          inputWrapper:
+            "bg-background-secondary border-border hover:border-border-focus",
+          label: "text-text-primary",
+        }}
         {...register("probability_percentage", { valueAsNumber: true })}
       />
 
       {/* Error Message */}
       {errors.root && (
-        <div className="p-3 bg-danger-50 border border-danger-200 rounded-lg">
-          <p className="text-danger text-sm">{errors.root.message}</p>
+        <div className="p-3 bg-error-50 dark:bg-error-950/20 border border-error-200 dark:border-error-800 rounded-lg">
+          <p className="text-error-600 dark:text-error-400 text-sm">
+            {errors.root.message}
+          </p>
         </div>
       )}
 
       {/* Form Actions */}
       <div className="flex gap-3 justify-end pt-4">
         {onCancel && (
-          <Button variant="light" onPress={onCancel} isDisabled={isSubmitting}>
+          <Button
+            variant="light"
+            onPress={onCancel}
+            isDisabled={isSubmitting}
+            className="text-text-secondary hover:text-text-primary hover:bg-background-secondary"
+          >
             Cancel
           </Button>
         )}
-        <Button type="submit" color="primary" isLoading={isSubmitting}>
+        <Button
+          type="submit"
+          color="primary"
+          isLoading={isSubmitting}
+          className="bg-primary-500 hover:bg-primary-600 text-white"
+        >
           {deal ? "Update Deal" : "Create Deal"}
         </Button>
       </div>

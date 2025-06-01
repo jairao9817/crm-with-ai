@@ -190,13 +190,13 @@ const DealsPage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Spinner size="lg" />
+        <Spinner size="lg" color="primary" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6 bg-background min-h-screen">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -209,6 +209,7 @@ const DealsPage: React.FC = () => {
           color="primary"
           startContent={<PlusIcon className="w-4 h-4" />}
           onPress={onCreateOpen}
+          className="shadow-lg hover:shadow-xl transition-shadow duration-200"
         >
           Add Deal
         </Button>
@@ -216,56 +217,73 @@ const DealsPage: React.FC = () => {
 
       {/* Error State */}
       {error && (
-        <Card className="border-error bg-error-50">
+        <Card className="border-error bg-error-50 dark:bg-error-950/20 border-2">
           <CardBody>
-            <p className="text-error-600">{error}</p>
+            <p className="text-error-600 dark:text-error-400">{error}</p>
           </CardBody>
         </Card>
       )}
 
       {/* Filters and Search */}
-      <Card>
+      <Card className="bg-surface border border-border shadow-md">
         <CardBody>
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center flex-1">
               <Input
                 placeholder="Search deals, contacts..."
                 startContent={
-                  <MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />
+                  <MagnifyingGlassIcon className="w-4 h-4 text-text-tertiary" />
                 }
                 value={searchTerm}
                 onValueChange={handleSearchChange}
                 className="w-full sm:w-80"
+                classNames={{
+                  input:
+                    "bg-transparent text-text-primary placeholder:text-text-tertiary",
+                  inputWrapper:
+                    "bg-background-secondary border-border hover:border-border-focus",
+                }}
               />
               <Select
                 placeholder="Filter by stage"
-                startContent={<FunnelIcon className="w-4 h-4" />}
+                startContent={
+                  <FunnelIcon className="w-4 h-4 text-text-tertiary" />
+                }
                 selectedKeys={filters.stage ? [filters.stage] : ["all"]}
                 onSelectionChange={(keys) => {
                   const stage = Array.from(keys)[0] as string;
                   handleStageFilter(stage);
                 }}
                 className="w-full sm:w-48"
+                classNames={{
+                  trigger:
+                    "bg-background-secondary border-border hover:border-border-focus",
+                  value: "text-text-primary",
+                }}
               >
                 {[
-                  <SelectItem key="all">All Stages</SelectItem>,
+                  <SelectItem key="all" className="text-text-primary">
+                    All Stages
+                  </SelectItem>,
                   ...(
                     Object.entries(stageConfig) as [
                       DealStage,
                       (typeof stageConfig)[DealStage]
                     ][]
                   ).map(([key, config]) => (
-                    <SelectItem key={key}>{config.label}</SelectItem>
+                    <SelectItem key={key} className="text-text-primary">
+                      {config.label}
+                    </SelectItem>
                   )),
                 ]}
               </Select>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-500">
+            <div className="text-right bg-background-secondary rounded-lg p-3 border border-border">
+              <p className="text-sm text-text-secondary">
                 {filteredDeals.length} deal
                 {filteredDeals.length !== 1 ? "s" : ""}
               </p>
-              <p className="text-lg font-semibold text-green-600">
+              <p className="text-lg font-semibold text-success-600 dark:text-success-400">
                 {formatCurrency(totalValue)}
               </p>
             </div>
@@ -274,28 +292,51 @@ const DealsPage: React.FC = () => {
       </Card>
 
       {/* Deals Table */}
-      <Card>
-        <Table aria-label="Deals table">
+      <Card className="bg-surface border border-border shadow-lg">
+        <Table
+          aria-label="Deals table"
+          classNames={{
+            wrapper: "bg-transparent",
+            th: "bg-background-secondary text-text-primary border-b border-border",
+            td: "border-b border-border/50",
+          }}
+        >
           <TableHeader>
-            <TableColumn>DEAL</TableColumn>
-            <TableColumn>CONTACT</TableColumn>
-            <TableColumn>STAGE</TableColumn>
-            <TableColumn>VALUE</TableColumn>
-            <TableColumn>PROBABILITY</TableColumn>
-            <TableColumn>CLOSE DATE</TableColumn>
-            <TableColumn>ACTIONS</TableColumn>
+            <TableColumn className="text-text-primary font-semibold">
+              DEAL
+            </TableColumn>
+            <TableColumn className="text-text-primary font-semibold">
+              CONTACT
+            </TableColumn>
+            <TableColumn className="text-text-primary font-semibold">
+              STAGE
+            </TableColumn>
+            <TableColumn className="text-text-primary font-semibold">
+              VALUE
+            </TableColumn>
+            <TableColumn className="text-text-primary font-semibold">
+              PROBABILITY
+            </TableColumn>
+            <TableColumn className="text-text-primary font-semibold">
+              CLOSE DATE
+            </TableColumn>
+            <TableColumn className="text-text-primary font-semibold">
+              ACTIONS
+            </TableColumn>
           </TableHeader>
           <TableBody emptyContent="No deals found">
             {filteredDeals.map((deal) => (
               <TableRow
                 key={deal.id}
-                className="cursor-pointer hover:bg-gray-50"
+                className="cursor-pointer hover:bg-background-secondary/50 transition-colors duration-150"
                 onClick={() => handleView(deal)}
               >
                 <TableCell>
                   <div>
-                    <p className="font-semibold text-gray-900">{deal.title}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="font-semibold text-text-primary">
+                      {deal.title}
+                    </p>
+                    <p className="text-sm text-text-secondary">
                       Created {new Date(deal.created_at).toLocaleDateString()}
                     </p>
                   </div>
@@ -303,20 +344,20 @@ const DealsPage: React.FC = () => {
                 <TableCell>
                   {deal.contact ? (
                     <div>
-                      <p className="font-medium text-gray-900">
+                      <p className="font-medium text-text-primary">
                         {deal.contact.name}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-text-secondary">
                         {deal.contact.email}
                       </p>
                       {deal.contact.company && (
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-text-tertiary">
                           {deal.contact.company}
                         </p>
                       )}
                     </div>
                   ) : (
-                    <span className="text-gray-400">No contact</span>
+                    <span className="text-text-tertiary">No contact</span>
                   )}
                 </TableCell>
                 <TableCell>
@@ -331,6 +372,11 @@ const DealsPage: React.FC = () => {
                       }}
                       className="w-40"
                       size="sm"
+                      classNames={{
+                        trigger:
+                          "bg-background-secondary border-border hover:border-border-focus",
+                        value: "text-text-primary",
+                      }}
                     >
                       {(
                         Object.entries(stageConfig) as [
@@ -338,29 +384,39 @@ const DealsPage: React.FC = () => {
                           (typeof stageConfig)[DealStage]
                         ][]
                       ).map(([key, config]) => (
-                        <SelectItem key={key}>{config.label}</SelectItem>
+                        <SelectItem key={key} className="text-text-primary">
+                          {config.label}
+                        </SelectItem>
                       ))}
                     </Select>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <span className="font-semibold text-green-600">
+                  <span className="font-semibold text-success-600 dark:text-success-400">
                     {formatCurrency(deal.monetary_value)}
                   </span>
                 </TableCell>
                 <TableCell>
-                  <Chip size="sm" variant="flat" color="default">
+                  <Chip
+                    size="sm"
+                    variant="flat"
+                    color="default"
+                    classNames={{
+                      base: "bg-background-secondary border border-border",
+                      content: "text-text-primary font-medium",
+                    }}
+                  >
                     {deal.probability_percentage}%
                   </Chip>
                 </TableCell>
                 <TableCell>
                   {deal.expected_close_date ? (
-                    <div className="flex items-center gap-1 text-sm">
-                      <CalendarIcon className="w-4 h-4 text-gray-400" />
+                    <div className="flex items-center gap-1 text-sm text-text-secondary">
+                      <CalendarIcon className="w-4 h-4 text-text-tertiary" />
                       {new Date(deal.expected_close_date).toLocaleDateString()}
                     </div>
                   ) : (
-                    <span className="text-gray-400">Not set</span>
+                    <span className="text-text-tertiary">Not set</span>
                   )}
                 </TableCell>
                 <TableCell>
@@ -374,6 +430,7 @@ const DealsPage: React.FC = () => {
                         size="sm"
                         variant="light"
                         onPress={() => handleView(deal)}
+                        className="text-text-secondary hover:text-text-primary hover:bg-background-secondary"
                       >
                         <EyeIcon className="w-4 h-4" />
                       </Button>
@@ -384,6 +441,7 @@ const DealsPage: React.FC = () => {
                         size="sm"
                         variant="light"
                         onPress={() => handleEdit(deal)}
+                        className="text-text-secondary hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-950/20"
                       >
                         <PencilIcon className="w-4 h-4" />
                       </Button>
@@ -395,6 +453,7 @@ const DealsPage: React.FC = () => {
                         variant="light"
                         color="danger"
                         onPress={() => handleDelete(deal)}
+                        className="text-text-secondary hover:text-error-500 hover:bg-error-50 dark:hover:bg-error-950/20"
                       >
                         <TrashIcon className="w-4 h-4" />
                       </Button>
@@ -408,9 +467,22 @@ const DealsPage: React.FC = () => {
       </Card>
 
       {/* Create Deal Modal */}
-      <Modal isOpen={isCreateOpen} onClose={onCreateClose} size="2xl">
+      <Modal
+        isOpen={isCreateOpen}
+        onClose={onCreateClose}
+        size="2xl"
+        classNames={{
+          backdrop: "bg-black/50 backdrop-blur-sm",
+          base: "bg-surface border border-border",
+          header: "border-b border-border",
+          body: "py-6",
+          footer: "border-t border-border",
+        }}
+      >
         <ModalContent>
-          <ModalHeader>Create New Deal</ModalHeader>
+          <ModalHeader className="text-text-primary">
+            Create New Deal
+          </ModalHeader>
           <ModalBody>
             <DealForm onSuccess={handleFormSuccess} />
           </ModalBody>
@@ -418,9 +490,20 @@ const DealsPage: React.FC = () => {
       </Modal>
 
       {/* Edit Deal Modal */}
-      <Modal isOpen={isEditOpen} onClose={onEditClose} size="2xl">
+      <Modal
+        isOpen={isEditOpen}
+        onClose={onEditClose}
+        size="2xl"
+        classNames={{
+          backdrop: "bg-black/50 backdrop-blur-sm",
+          base: "bg-surface border border-border",
+          header: "border-b border-border",
+          body: "py-6",
+          footer: "border-t border-border",
+        }}
+      >
         <ModalContent>
-          <ModalHeader>Edit Deal</ModalHeader>
+          <ModalHeader className="text-text-primary">Edit Deal</ModalHeader>
           <ModalBody>
             {selectedDeal && (
               <DealForm deal={selectedDeal} onSuccess={handleFormSuccess} />
@@ -433,24 +516,40 @@ const DealsPage: React.FC = () => {
       <Modal
         isOpen={isDeleteConfirmOpen}
         onClose={() => setIsDeleteConfirmOpen(false)}
+        classNames={{
+          backdrop: "bg-black/50 backdrop-blur-sm",
+          base: "bg-surface border border-border",
+          header: "border-b border-border",
+          body: "py-6",
+          footer: "border-t border-border",
+        }}
       >
         <ModalContent>
-          <ModalHeader>Confirm Delete</ModalHeader>
+          <ModalHeader className="text-text-primary">
+            Confirm Delete
+          </ModalHeader>
           <ModalBody>
-            <p>
+            <p className="text-text-secondary">
               Are you sure you want to delete{" "}
-              <strong>{dealToDelete?.title}</strong>? This action cannot be
-              undone.
+              <strong className="text-text-primary">
+                {dealToDelete?.title}
+              </strong>
+              ? This action cannot be undone.
             </p>
           </ModalBody>
           <ModalFooter>
             <Button
               variant="light"
               onPress={() => setIsDeleteConfirmOpen(false)}
+              className="text-text-secondary hover:text-text-primary hover:bg-background-secondary"
             >
               Cancel
             </Button>
-            <Button color="danger" onPress={confirmDelete}>
+            <Button
+              color="danger"
+              onPress={confirmDelete}
+              className="bg-error-500 hover:bg-error-600 text-white"
+            >
               Delete
             </Button>
           </ModalFooter>
