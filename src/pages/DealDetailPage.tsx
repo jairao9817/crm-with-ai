@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Card,
@@ -30,6 +30,8 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
   ChartBarIcon,
+  ArchiveBoxIcon,
+  ClockIcon,
 } from "@heroicons/react/24/outline";
 import { useDeal } from "../hooks/useDeals";
 import { useDealRelatedData } from "../hooks/useDealRelatedData";
@@ -109,6 +111,35 @@ const DealDetailPage: React.FC = () => {
   const [aiCoachSuggestions, setAICoachSuggestions] = useState<string | null>(
     null
   );
+  const [aiCoachHistory, setAICoachHistory] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  // Load existing AI coach suggestions when deal changes
+  useEffect(() => {
+    if (deal?.id) {
+      loadAICoachHistory();
+    }
+  }, [deal?.id]);
+
+  const loadAICoachHistory = async () => {
+    if (!deal?.id) return;
+
+    try {
+      setLoadingHistory(true);
+      const { DealCoachService } = await import("../services/dealCoachService");
+      const history = await DealCoachService.getSuggestionsByDeal(deal.id);
+      setAICoachHistory(history);
+
+      // Set the latest suggestion as current if no new one is being generated
+      if (history.length > 0 && !aiCoachSuggestions) {
+        setAICoachSuggestions(history[0].suggestions);
+      }
+    } catch (error) {
+      console.error("Failed to load AI coach history:", error);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   const handleFormSuccess = () => {
     onEditClose();
@@ -135,7 +166,8 @@ const DealDetailPage: React.FC = () => {
     setAICoachOpen(true);
     setAICoachLoading(false);
     setAICoachError(null);
-    setAICoachSuggestions(null);
+    // Don't reset suggestions - keep showing the latest one
+    loadAICoachHistory();
   };
 
   const handleGenerateAICoach = async () => {
@@ -149,6 +181,8 @@ const DealDetailPage: React.FC = () => {
         purchaseHistory,
       });
       setAICoachSuggestions(suggestions);
+      // Refresh history to include the new suggestion
+      await loadAICoachHistory();
     } catch (err: any) {
       setAICoachError(err.message || "Failed to get AI suggestions.");
     } finally {
@@ -809,37 +843,170 @@ const DealDetailPage: React.FC = () => {
       <Modal
         isOpen={isAICoachOpen}
         onClose={() => setAICoachOpen(false)}
-        size="2xl"
+        size="4xl"
+        scrollBehavior="inside"
       >
         <ModalContent>
           <ModalHeader>
-            AI Deal Coach{" "}
-            <span className="ml-2 text-xs text-warning">AI-generated</span>
+            <div className="flex items-center gap-2">
+              <ChatBubbleLeftRightIcon className="w-5 h-5 text-primary" />
+              <span>AI Deal Coach</span>
+              <Chip size="sm" color="warning" variant="flat">
+                AI-generated
+              </Chip>
+              {aiCoachHistory.length > 0 && (
+                <Chip size="sm" variant="flat" color="primary">
+                  {aiCoachHistory.length} suggestions
+                </Chip>
+              )}
+            </div>
           </ModalHeader>
           <ModalBody>
-            {!aiCoachSuggestions && !aiCoachLoading && !aiCoachError && (
-              <Button
-                color="secondary"
-                onPress={handleGenerateAICoach}
-                startContent={<ChatBubbleLeftRightIcon className="w-4 h-4" />}
+            <Tabs className="w-full">
+              <Tab
+                key="current"
+                title={
+                  <div className="flex items-center gap-2">
+                    <ChatBubbleLeftRightIcon className="w-4 h-4" />
+                    Current Suggestions
+                  </div>
+                }
               >
-                Generate Suggestions
-              </Button>
-            )}
-            {aiCoachLoading && (
-              <div className="flex justify-center items-center py-8">
-                <Spinner />
-                <span className="ml-3">Getting suggestions...</span>
-              </div>
-            )}
-            {aiCoachError && (
-              <div className="text-danger-600 py-4">{aiCoachError}</div>
-            )}
-            {aiCoachSuggestions && (
-              <div className="whitespace-pre-line text-text-primary text-base">
-                {aiCoachSuggestions}
-              </div>
-            )}
+                <div className="space-y-4">
+                  {!aiCoachSuggestions && !aiCoachLoading && !aiCoachError && (
+                    <div className="text-center py-8">
+                      <Button
+                        color="primary"
+                        size="lg"
+                        onPress={handleGenerateAICoach}
+                        startContent={
+                          <ChatBubbleLeftRightIcon className="w-4 h-4" />
+                        }
+                      >
+                        Generate AI Suggestions
+                      </Button>
+                      <p className="text-text-secondary text-sm mt-2">
+                        Get personalized recommendations to move this deal
+                        forward
+                      </p>
+                    </div>
+                  )}
+
+                  {aiCoachLoading && (
+                    <div className="flex justify-center items-center py-8">
+                      <Spinner size="lg" color="primary" />
+                      <span className="ml-3">
+                        Analyzing deal and generating suggestions...
+                      </span>
+                    </div>
+                  )}
+
+                  {aiCoachError && (
+                    <div className="p-4 rounded-lg bg-danger-50 border border-danger-200">
+                      <p className="text-danger-600">{aiCoachError}</p>
+                      <Button
+                        size="sm"
+                        color="danger"
+                        variant="flat"
+                        className="mt-2"
+                        onPress={handleGenerateAICoach}
+                      >
+                        Try Again
+                      </Button>
+                    </div>
+                  )}
+
+                  {aiCoachSuggestions && (
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-lg bg-success-50 border border-success-200">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-semibold text-success-800">
+                            AI Recommendations
+                          </h4>
+                          <Button
+                            size="sm"
+                            color="primary"
+                            variant="flat"
+                            onPress={handleGenerateAICoach}
+                            isLoading={aiCoachLoading}
+                          >
+                            Generate New
+                          </Button>
+                        </div>
+                        <div className="prose prose-sm max-w-none">
+                          <div className="whitespace-pre-line text-text-primary text-base leading-relaxed">
+                            {aiCoachSuggestions}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Tab>
+
+              {aiCoachHistory.length > 0 && (
+                <Tab
+                  key="history"
+                  title={
+                    <div className="flex items-center gap-2">
+                      <ArchiveBoxIcon className="w-4 h-4" />
+                      History ({aiCoachHistory.length})
+                    </div>
+                  }
+                >
+                  <div className="space-y-4">
+                    {loadingHistory ? (
+                      <div className="flex justify-center py-8">
+                        <Spinner size="lg" color="primary" />
+                      </div>
+                    ) : (
+                      aiCoachHistory.map((suggestion, index) => (
+                        <Card
+                          key={suggestion.id}
+                          className="bg-background border border-border"
+                        >
+                          <CardHeader className="pb-2">
+                            <div className="flex items-center justify-between w-full">
+                              <h4 className="text-sm font-semibold text-text-primary">
+                                Suggestion #{aiCoachHistory.length - index}
+                              </h4>
+                              <div className="flex items-center gap-2 text-xs text-text-secondary">
+                                <ClockIcon className="w-3 h-3" />
+                                {new Date(
+                                  suggestion.generated_at
+                                ).toLocaleDateString("en-US", {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                                {index === 0 && (
+                                  <Chip
+                                    size="sm"
+                                    color="success"
+                                    variant="flat"
+                                  >
+                                    Latest
+                                  </Chip>
+                                )}
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardBody className="pt-0">
+                            <div className="prose prose-sm max-w-none">
+                              <div className="whitespace-pre-line text-text-secondary text-sm leading-relaxed">
+                                {suggestion.suggestions}
+                              </div>
+                            </div>
+                          </CardBody>
+                        </Card>
+                      ))
+                    )}
+                  </div>
+                </Tab>
+              )}
+            </Tabs>
           </ModalBody>
         </ModalContent>
       </Modal>

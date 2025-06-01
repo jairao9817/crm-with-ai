@@ -81,20 +81,6 @@ Implementation Steps:
 - Optionally, aggregate explanations for reporting on the dashboard.
 
 ---
-
-Technical Stack & Integration
-- OpenAI API: For all LLM-powered features (text generation, persona, objection handling, explanations).
-- LangChain (optional): For advanced prompt engineering, chaining, or retrieval-augmented generation.
-- Vector DB (optional): For storing and searching AI-generated content, personas, objections, etc. (e.g., Pinecone, Weaviate, or open-source alternatives).
-- Frontend:
-  - Add new UI components (buttons, modals, cards) in relevant pages.
-  - Use React hooks for API calls and state management.
-- Backend (if needed):
-  - Create API endpoints to proxy OpenAI requests, handle security, and manage vector DB.
-  - Aggregate and preprocess data for AI prompts.
-
----
-
 User Journey Flow Summary
 
 | Feature                  | Page(s)                | User Action                        | AI Interaction                        | Output Location         |

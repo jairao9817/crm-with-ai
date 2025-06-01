@@ -257,6 +257,8 @@ export interface ContactPersona {
   buying_patterns: string[];
   generated_at: string;
   created_by: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface GeneratePersonaInput {
@@ -288,7 +290,11 @@ export interface ObjectionHandlerResponse {
   response_strategy: string;
   key_points: string[];
   tone: "professional" | "empathetic" | "confident" | "consultative";
+  context_data?: Record<string, any>;
   generated_at: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
 }
 
 // Win-Loss Explainer Types
@@ -311,5 +317,60 @@ export interface WinLossExplainerResponse {
   lessons_learned: string[];
   recommendations: string[];
   confidence_score: number;
+  context_data?: Record<string, any>;
+  generated_at: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Deal Coach Suggestion interface for database storage
+export interface DealCoachSuggestion {
+  id: string;
+  deal_id: string;
+  suggestions: string;
+  deal_context: Record<string, any>;
+  generated_at: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Input interfaces for creating database records
+export interface CreateContactPersonaInput {
+  contact_id: string;
+  persona_summary: string;
+  behavioral_traits: string[];
+  communication_preferences: string[];
+  buying_patterns: string[];
+  generated_at: string;
+}
+
+export interface CreateDealCoachSuggestionInput {
+  deal_id: string;
+  suggestions: string;
+  deal_context: Record<string, any>;
+  generated_at: string;
+}
+
+export interface CreateObjectionResponseInput {
+  objection: string;
+  suggested_response: string;
+  response_strategy: string;
+  key_points: string[];
+  tone: "professional" | "empathetic" | "confident" | "consultative";
+  context_data?: Record<string, any>;
+  generated_at: string;
+}
+
+export interface CreateWinLossAnalysisInput {
+  deal_id: string;
+  outcome: "won" | "lost";
+  explanation: string;
+  key_factors: string[];
+  lessons_learned: string[];
+  recommendations: string[];
+  confidence_score: number;
+  context_data?: Record<string, any>;
   generated_at: string;
 }

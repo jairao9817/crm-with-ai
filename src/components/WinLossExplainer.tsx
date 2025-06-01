@@ -1,28 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
-  ModalFooter,
   Button,
   Card,
   CardBody,
+  CardHeader,
   Chip,
   Divider,
   Spinner,
-  Progress,
+  Tabs,
+  Tab,
 } from "@heroui/react";
 import {
   ChartBarIcon,
   LightBulbIcon,
-  AcademicCapIcon,
-  ClipboardDocumentListIcon,
+  ClipboardDocumentIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon,
+  ArchiveBoxIcon,
+  ClockIcon,
+  TrophyIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { aiService } from "../services/aiService";
+import { WinLossAnalysisService } from "../services/winLossAnalysisService";
 import type {
   WinLossExplainerInput,
   WinLossExplainerResponse,
@@ -30,7 +33,6 @@ import type {
   Task,
   Communication,
   PurchaseHistory,
-  Contact,
 } from "../types";
 
 interface WinLossExplainerProps {
@@ -41,7 +43,6 @@ interface WinLossExplainerProps {
     tasks?: Task[];
     communications?: Communication[];
     purchaseHistory?: PurchaseHistory[];
-    contact?: Contact;
   };
 }
 
@@ -56,12 +57,39 @@ export const WinLossExplainer: React.FC<WinLossExplainerProps> = ({
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [analysisHistory, setAnalysisHistory] = useState<
+    WinLossExplainerResponse[]
+  >([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [selectedTab, setSelectedTab] = useState("current");
 
-  const isClosedDeal =
-    deal.stage === "closed-won" || deal.stage === "closed-lost";
-  const outcome = deal.stage === "closed-won" ? "won" : "lost";
+  // Load analysis history when modal opens
+  useEffect(() => {
+    if (isOpen && deal?.id) {
+      loadAnalysisHistory();
+    }
+  }, [isOpen, deal?.id]);
 
-  const handleGenerateAnalysis = async () => {
+  const loadAnalysisHistory = async () => {
+    if (!deal?.id) return;
+
+    try {
+      setLoadingHistory(true);
+      const history = await WinLossAnalysisService.getAnalysesByDeal(deal.id);
+      setAnalysisHistory(history);
+
+      // Set the latest analysis as current if no new one is being generated
+      if (history.length > 0 && !analysis) {
+        setAnalysis(history[0]);
+      }
+    } catch (err) {
+      console.error("Failed to load analysis history:", err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleAnalyze = async () => {
     setLoading(true);
     setError(null);
     setAnalysis(null);
@@ -72,8 +100,10 @@ export const WinLossExplainer: React.FC<WinLossExplainerProps> = ({
         context,
       };
 
-      const aiAnalysis = await aiService.generateWinLossExplanation(input);
-      setAnalysis(aiAnalysis);
+      const aiResponse = await aiService.generateWinLossExplanation(input);
+      setAnalysis(aiResponse);
+      // Refresh history to include the new analysis
+      await loadAnalysisHistory();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to generate analysis"
@@ -86,14 +116,23 @@ export const WinLossExplainer: React.FC<WinLossExplainerProps> = ({
   const handleClose = () => {
     setAnalysis(null);
     setError(null);
+    setSelectedTab("current");
     onClose();
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      console.error("Failed to copy to clipboard:", err);
+    }
   };
 
   const getOutcomeIcon = (outcome: string) => {
     return outcome === "won" ? (
-      <CheckCircleIcon className="w-5 h-5" />
+      <TrophyIcon className="w-5 h-5 text-success-600" />
     ) : (
-      <XCircleIcon className="w-5 h-5" />
+      <XCircleIcon className="w-5 h-5 text-danger-600" />
     );
   };
 
@@ -101,21 +140,132 @@ export const WinLossExplainer: React.FC<WinLossExplainerProps> = ({
     return outcome === "won" ? "success" : "danger";
   };
 
-  const getConfidenceColor = (score: number) => {
-    if (score >= 80) return "success";
-    if (score >= 60) return "warning";
-    return "danger";
-  };
+  const renderAnalysis = (
+    analysisData: WinLossExplainerResponse,
+    isHistorical = false
+  ) => (
+    <Card
+      className={`${
+        isHistorical
+          ? "bg-background border border-border"
+          : "bg-primary-50 border border-primary-200"
+      }`}
+    >
+      <CardBody className="p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h4
+            className={`text-lg font-semibold ${
+              isHistorical ? "text-text-primary" : "text-primary-800"
+            } flex items-center gap-2`}
+          >
+            <ChartBarIcon className="w-5 h-5" />
+            {isHistorical ? "Previous Analysis" : "Win-Loss Analysis"}
+          </h4>
+          <div className="flex items-center gap-2">
+            <Chip
+              size="sm"
+              color={getOutcomeColor(analysisData.outcome) as any}
+              variant="flat"
+              startContent={getOutcomeIcon(analysisData.outcome)}
+            >
+              {analysisData.outcome.toUpperCase()}
+            </Chip>
+            <Button
+              size="sm"
+              variant="flat"
+              color={isHistorical ? "primary" : "primary"}
+              startContent={<ClipboardDocumentIcon className="w-4 h-4" />}
+              onPress={() => copyToClipboard(analysisData.explanation)}
+            >
+              Copy
+            </Button>
+          </div>
+        </div>
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+        <div
+          className={`${
+            isHistorical ? "bg-surface" : "bg-white"
+          } p-4 rounded-lg border ${
+            isHistorical ? "border-border" : "border-primary-300"
+          }`}
+        >
+          <p
+            className={`${
+              isHistorical ? "text-text-primary" : "text-gray-800"
+            } leading-relaxed whitespace-pre-wrap`}
+          >
+            {analysisData.explanation}
+          </p>
+        </div>
+
+        <Divider />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h5
+              className={`font-semibold ${
+                isHistorical ? "text-text-primary" : "text-primary-800"
+              } mb-2`}
+            >
+              Key Factors
+            </h5>
+            <ul className="space-y-1">
+              {analysisData.key_factors.map((factor, index) => (
+                <li
+                  key={index}
+                  className={`flex items-start gap-2 text-sm ${
+                    isHistorical ? "text-text-secondary" : "text-gray-700"
+                  }`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      isHistorical ? "bg-primary" : "bg-primary-500"
+                    } mt-2 flex-shrink-0`}
+                  />
+                  {factor}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h5
+              className={`font-semibold ${
+                isHistorical ? "text-text-primary" : "text-primary-800"
+              } mb-2`}
+            >
+              Lessons Learned
+            </h5>
+            <ul className="space-y-1">
+              {analysisData.lessons_learned.map((lesson, index) => (
+                <li
+                  key={index}
+                  className={`flex items-start gap-2 text-sm ${
+                    isHistorical ? "text-text-secondary" : "text-gray-700"
+                  }`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      isHistorical ? "bg-warning" : "bg-warning-500"
+                    } mt-2 flex-shrink-0`}
+                  />
+                  {lesson}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div
+          className={`text-xs ${
+            isHistorical ? "text-text-secondary" : "text-primary-600"
+          }`}
+        >
+          Generated at {new Date(analysisData.generated_at).toLocaleString()}
+        </div>
+      </CardBody>
+    </Card>
+  );
 
   return (
     <Modal
@@ -125,251 +275,188 @@ export const WinLossExplainer: React.FC<WinLossExplainerProps> = ({
       scrollBehavior="inside"
     >
       <ModalContent>
-        <ModalHeader className="flex flex-col gap-1">
+        <ModalHeader>
           <div className="flex items-center gap-2">
             <ChartBarIcon className="w-5 h-5 text-primary" />
-            <h2 className="text-xl font-semibold">Win-Loss Analysis</h2>
+            <span>Win-Loss Analysis</span>
+            <Chip size="sm" color="warning" variant="flat">
+              AI-powered
+            </Chip>
+            {analysisHistory.length > 0 && (
+              <Chip size="sm" variant="flat" color="primary">
+                {analysisHistory.length} analyses
+              </Chip>
+            )}
           </div>
-          <p className="text-sm text-text-secondary font-normal">
-            AI-powered analysis of why this deal was {outcome}
-          </p>
         </ModalHeader>
-
-        <ModalBody className="space-y-6">
-          {/* Deal Summary */}
-          <Card className="bg-background border border-border">
-            <CardBody className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-semibold text-text-primary flex items-center gap-2">
+        <ModalBody>
+          <Tabs
+            selectedKey={selectedTab}
+            onSelectionChange={(key) => setSelectedTab(key as string)}
+            className="w-full"
+          >
+            <Tab
+              key="current"
+              title={
+                <div className="flex items-center gap-2">
                   <ChartBarIcon className="w-4 h-4" />
-                  Deal Summary
-                </h4>
-                <Chip
-                  size="sm"
-                  color={getOutcomeColor(outcome)}
-                  startContent={getOutcomeIcon(outcome)}
-                >
-                  {outcome.toUpperCase()}
-                </Chip>
-              </div>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-medium">Deal:</span> {deal.title}
+                  Current Analysis
                 </div>
-                <div>
-                  <span className="font-medium">Value:</span> $
-                  {deal.monetary_value.toLocaleString()}
-                </div>
-                <div>
-                  <span className="font-medium">Probability:</span>{" "}
-                  {deal.probability_percentage}%
-                </div>
-                <div>
-                  <span className="font-medium">Stage:</span>{" "}
-                  {deal.stage.replace("-", " ")}
-                </div>
-                {context?.contact && (
-                  <>
-                    <div>
-                      <span className="font-medium">Customer:</span>{" "}
-                      {context.contact.name}
-                    </div>
-                    <div>
-                      <span className="font-medium">Company:</span>{" "}
-                      {context.contact.company || "Not specified"}
-                    </div>
-                  </>
-                )}
-              </div>
-            </CardBody>
-          </Card>
-
-          {/* Generate Analysis Button */}
-          {!analysis && !loading && !error && (
-            <div className="text-center py-8">
-              <Button
-                color="primary"
-                size="lg"
-                startContent={<ChartBarIcon className="w-5 h-5" />}
-                onPress={handleGenerateAnalysis}
-              >
-                Generate AI Analysis
-              </Button>
-              <p className="text-sm text-text-secondary mt-2">
-                Analyze deal data to understand why it was {outcome}
-              </p>
-            </div>
-          )}
-
-          {/* Loading State */}
-          {loading && (
-            <Card className="bg-primary-50 border border-primary-200">
-              <CardBody className="p-6">
-                <div className="flex items-center justify-center gap-3">
-                  <Spinner size="sm" color="primary" />
-                  <span className="text-primary-700">
-                    Analyzing deal data and generating insights...
-                  </span>
-                </div>
-              </CardBody>
-            </Card>
-          )}
-
-          {/* Error State */}
-          {error && (
-            <Card className="bg-danger-50 border border-danger-200">
-              <CardBody className="p-4">
-                <div className="flex items-center gap-2 text-danger-600">
-                  <ExclamationTriangleIcon className="w-4 h-4" />
-                  <span className="text-sm">{error}</span>
-                </div>
-                <Button
-                  size="sm"
-                  color="danger"
-                  variant="flat"
-                  className="mt-3"
-                  onPress={handleGenerateAnalysis}
-                >
-                  Try Again
-                </Button>
-              </CardBody>
-            </Card>
-          )}
-
-          {/* Analysis Results */}
-          {analysis && (
-            <div className="space-y-6">
-              {/* Confidence Score */}
-              <Card className="bg-background border border-border">
-                <CardBody className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-semibold text-text-primary">
-                      Analysis Confidence
-                    </h4>
-                    <Chip
-                      size="sm"
-                      color={getConfidenceColor(analysis.confidence_score)}
-                    >
-                      {analysis.confidence_score}%
-                    </Chip>
-                  </div>
-                  <Progress
-                    value={analysis.confidence_score}
-                    color={getConfidenceColor(analysis.confidence_score)}
-                    className="w-full"
-                  />
-                  <p className="text-xs text-text-secondary mt-2">
-                    Based on available data quality and completeness
-                  </p>
-                </CardBody>
-              </Card>
-
-              {/* Main Explanation */}
-              <Card className="bg-background border border-border">
-                <CardBody className="p-4">
-                  <h4 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">
-                    <ChartBarIcon className="w-4 h-4" />
-                    Why This Deal Was{" "}
-                    {outcome.charAt(0).toUpperCase() + outcome.slice(1)}
+              }
+            >
+              <div className="space-y-6">
+                <div className="p-4 bg-surface rounded-lg border border-border">
+                  <h4 className="text-sm font-semibold text-text-primary mb-2">
+                    Deal Information
                   </h4>
-                  <div className="prose prose-sm max-w-none">
-                    <p className="text-text-secondary leading-relaxed whitespace-pre-wrap">
-                      {analysis.explanation}
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-text-secondary">Deal:</span>
+                      <span className="ml-2 text-text-primary">
+                        {deal.title}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-text-secondary">Value:</span>
+                      <span className="ml-2 text-text-primary">
+                        ${deal.monetary_value.toLocaleString()}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-text-secondary">Stage:</span>
+                      <span className="ml-2 text-text-primary">
+                        {deal.stage}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-text-secondary">Close Date:</span>
+                      <span className="ml-2 text-text-primary">
+                        {deal.close_date
+                          ? new Date(deal.close_date).toLocaleDateString()
+                          : "Not set"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {!analysis && !loading && !error && (
+                  <div className="text-center py-8">
+                    <Button
+                      color="primary"
+                      size="lg"
+                      onPress={handleAnalyze}
+                      startContent={<ChartBarIcon className="w-4 h-4" />}
+                    >
+                      Generate Analysis
+                    </Button>
+                    <p className="text-text-secondary text-sm mt-2">
+                      Get AI insights into why this deal was won or lost
                     </p>
                   </div>
-                </CardBody>
-              </Card>
+                )}
 
-              {/* Key Factors */}
-              <Card className="bg-background border border-border">
-                <CardBody className="p-4">
-                  <h4 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">
-                    <LightBulbIcon className="w-4 h-4" />
-                    Key Contributing Factors
-                  </h4>
-                  <div className="space-y-2">
-                    {analysis.key_factors.map((factor, index) => (
-                      <div
-                        key={index}
-                        className="flex items-start gap-2 p-2 rounded-lg bg-surface"
-                      >
-                        <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
-                        <p className="text-text-secondary text-sm">{factor}</p>
-                      </div>
-                    ))}
+                {loading && (
+                  <div className="flex justify-center items-center py-8">
+                    <Spinner size="lg" color="primary" />
+                    <span className="ml-3">Analyzing deal outcome...</span>
                   </div>
-                </CardBody>
-              </Card>
+                )}
 
-              {/* Lessons Learned */}
-              <Card className="bg-background border border-border">
-                <CardBody className="p-4">
-                  <h4 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">
-                    <AcademicCapIcon className="w-4 h-4" />
-                    Lessons Learned
-                  </h4>
-                  <div className="space-y-2">
-                    {analysis.lessons_learned.map((lesson, index) => (
-                      <div
-                        key={index}
-                        className="flex items-start gap-2 p-2 rounded-lg bg-surface"
-                      >
-                        <div className="w-2 h-2 rounded-full bg-warning mt-2 flex-shrink-0" />
-                        <p className="text-text-secondary text-sm">{lesson}</p>
-                      </div>
-                    ))}
+                {error && (
+                  <div className="p-4 rounded-lg bg-danger-50 border border-danger-200">
+                    <div className="flex items-center gap-2">
+                      <ExclamationTriangleIcon className="w-5 h-5 text-danger-600" />
+                      <p className="text-danger-600">{error}</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      color="danger"
+                      variant="flat"
+                      className="mt-2"
+                      onPress={handleAnalyze}
+                    >
+                      Try Again
+                    </Button>
                   </div>
-                </CardBody>
-              </Card>
+                )}
 
-              {/* Recommendations */}
-              <Card className="bg-background border border-border">
-                <CardBody className="p-4">
-                  <h4 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">
-                    <ClipboardDocumentListIcon className="w-4 h-4" />
-                    Recommendations for Future Deals
-                  </h4>
-                  <div className="space-y-2">
-                    {analysis.recommendations.map((recommendation, index) => (
-                      <div
-                        key={index}
-                        className="flex items-start gap-2 p-2 rounded-lg bg-surface"
+                {analysis && (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold text-text-primary">
+                        Analysis Results
+                      </h3>
+                      <Button
+                        size="sm"
+                        color="primary"
+                        variant="flat"
+                        onPress={handleAnalyze}
+                        isLoading={loading}
                       >
-                        <div className="w-2 h-2 rounded-full bg-success mt-2 flex-shrink-0" />
-                        <p className="text-text-secondary text-sm">
-                          {recommendation}
-                        </p>
-                      </div>
-                    ))}
+                        Generate New
+                      </Button>
+                    </div>
+                    {renderAnalysis(analysis)}
                   </div>
-                </CardBody>
-              </Card>
-
-              {/* Analysis Metadata */}
-              <div className="text-xs text-text-secondary text-center">
-                Analysis generated on {formatDate(analysis.generated_at)}
+                )}
               </div>
-            </div>
-          )}
-        </ModalBody>
+            </Tab>
 
-        <ModalFooter>
-          <Button variant="light" onPress={handleClose}>
-            Close
-          </Button>
-          {analysis && (
-            <Button
-              color="secondary"
-              onPress={() => {
-                setAnalysis(null);
-                setError(null);
-              }}
-              startContent={<ChartBarIcon className="w-4 h-4" />}
-            >
-              Generate New Analysis
-            </Button>
-          )}
-        </ModalFooter>
+            {analysisHistory.length > 0 && (
+              <Tab
+                key="history"
+                title={
+                  <div className="flex items-center gap-2">
+                    <ArchiveBoxIcon className="w-4 h-4" />
+                    History ({analysisHistory.length})
+                  </div>
+                }
+              >
+                <div className="space-y-4">
+                  {loadingHistory ? (
+                    <div className="flex justify-center py-8">
+                      <Spinner size="lg" color="primary" />
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {analysisHistory.map((analysisData, index) => (
+                        <div key={analysisData.id} className="relative">
+                          <div className="absolute -left-2 top-4 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                            <span className="text-xs text-white font-bold">
+                              {analysisHistory.length - index}
+                            </span>
+                          </div>
+                          <div className="ml-6">
+                            <div className="flex items-center gap-2 mb-2">
+                              <ClockIcon className="w-3 h-3 text-text-secondary" />
+                              <span className="text-xs text-text-secondary">
+                                {new Date(
+                                  analysisData.generated_at
+                                ).toLocaleDateString("en-US", {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+                              {index === 0 && (
+                                <Chip size="sm" color="success" variant="flat">
+                                  Latest
+                                </Chip>
+                              )}
+                            </div>
+                            {renderAnalysis(analysisData, true)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </Tab>
+            )}
+          </Tabs>
+        </ModalBody>
       </ModalContent>
     </Modal>
   );

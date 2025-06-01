@@ -6,7 +6,17 @@ import type {
   ObjectionHandlerResponse,
   WinLossExplainerInput,
   WinLossExplainerResponse,
+  Deal,
+  Task,
+  Communication,
+  PurchaseHistory,
 } from "../types/index";
+
+// Import the new service classes for database operations
+import { ContactPersonaService } from "./contactPersonaService";
+import { DealCoachService } from "./dealCoachService";
+import { ObjectionResponseService } from "./objectionResponseService";
+import { WinLossAnalysisService } from "./winLossAnalysisService";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -156,28 +166,55 @@ Ensure all insights are based on the actual data provided and avoid generic stat
       throw new Error("Incomplete response from AI. Please try again.");
     }
 
-    // Create the persona object
-    const persona: ContactPersona = {
-      id: `persona_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      contact_id: input.contact_id,
-      persona_summary: personaData.persona_summary,
-      behavioral_traits:
-        personaData.behavioral_traits.length > 0
-          ? personaData.behavioral_traits
-          : ["Data-driven", "Professional"],
-      communication_preferences:
-        personaData.communication_preferences.length > 0
-          ? personaData.communication_preferences
-          : ["Email preferred"],
-      buying_patterns:
-        personaData.buying_patterns.length > 0
-          ? personaData.buying_patterns
-          : ["Value-conscious"],
-      generated_at: new Date().toISOString(),
-      created_by: "ai_system",
-    };
+    // Save to database and return the saved persona
+    try {
+      const savedPersona = await ContactPersonaService.createPersona({
+        contact_id: input.contact_id,
+        persona_summary: personaData.persona_summary,
+        behavioral_traits:
+          personaData.behavioral_traits.length > 0
+            ? personaData.behavioral_traits
+            : ["Data-driven", "Professional"],
+        communication_preferences:
+          personaData.communication_preferences.length > 0
+            ? personaData.communication_preferences
+            : ["Email preferred"],
+        buying_patterns:
+          personaData.buying_patterns.length > 0
+            ? personaData.buying_patterns
+            : ["Value-conscious"],
+        generated_at: new Date().toISOString(),
+      });
 
-    return persona;
+      return savedPersona;
+    } catch (dbError) {
+      console.error("Failed to save persona to database:", dbError);
+
+      // Return the generated persona even if database save fails
+      const persona: ContactPersona = {
+        id: `persona_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        contact_id: input.contact_id,
+        persona_summary: personaData.persona_summary,
+        behavioral_traits:
+          personaData.behavioral_traits.length > 0
+            ? personaData.behavioral_traits
+            : ["Data-driven", "Professional"],
+        communication_preferences:
+          personaData.communication_preferences.length > 0
+            ? personaData.communication_preferences
+            : ["Email preferred"],
+        buying_patterns:
+          personaData.buying_patterns.length > 0
+            ? personaData.buying_patterns
+            : ["Value-conscious"],
+        generated_at: new Date().toISOString(),
+        created_by: "ai_system",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      return persona;
+    }
   } catch (error) {
     console.error("Error generating persona:", error);
     throw new Error("Failed to generate persona. Please try again.");
@@ -318,25 +355,56 @@ Choose the most appropriate tone based on the objection type and context.
       throw new Error("Incomplete response from AI. Please try again.");
     }
 
-    // Create the objection response object
-    const objectionResponse: ObjectionHandlerResponse = {
-      id: `objection_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      objection: objection,
-      suggested_response: responseData.suggested_response,
-      response_strategy: responseData.response_strategy,
-      key_points:
-        responseData.key_points.length > 0
-          ? responseData.key_points
-          : [
-              "Address the concern directly",
-              "Provide value proposition",
-              "Ask for next steps",
-            ],
-      tone: responseData.tone || "professional",
-      generated_at: new Date().toISOString(),
-    };
+    // Save to database and return the saved response
+    try {
+      const savedResponse =
+        await ObjectionResponseService.createObjectionResponse({
+          objection: objection,
+          suggested_response: responseData.suggested_response,
+          response_strategy: responseData.response_strategy,
+          key_points:
+            responseData.key_points.length > 0
+              ? responseData.key_points
+              : [
+                  "Address the concern directly",
+                  "Provide value proposition",
+                  "Ask for next steps",
+                ],
+          tone: responseData.tone || "professional",
+          context_data: context || {},
+          generated_at: new Date().toISOString(),
+        });
 
-    return objectionResponse;
+      return savedResponse;
+    } catch (dbError) {
+      console.error("Failed to save objection response to database:", dbError);
+
+      // Return the generated response even if database save fails
+      const objectionResponse: ObjectionHandlerResponse = {
+        id: `objection_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}`,
+        objection: objection,
+        suggested_response: responseData.suggested_response,
+        response_strategy: responseData.response_strategy,
+        key_points:
+          responseData.key_points.length > 0
+            ? responseData.key_points
+            : [
+                "Address the concern directly",
+                "Provide value proposition",
+                "Ask for next steps",
+              ],
+        tone: responseData.tone || "professional",
+        context_data: context || {},
+        generated_at: new Date().toISOString(),
+        created_by: "ai_system",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      return objectionResponse;
+    }
   } catch (error) {
     console.error("Error generating objection response:", error);
     throw new Error("Failed to generate objection response. Please try again.");
@@ -520,35 +588,229 @@ Recommendations should be 2-4 actionable steps for improving future performance.
       throw new Error("Incomplete response from AI. Please try again.");
     }
 
-    // Create the win-loss analysis object
-    const winLossAnalysis: WinLossExplainerResponse = {
-      id: `winloss_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      deal_id: deal.id,
-      outcome: outcome,
-      explanation: analysisData.explanation,
-      key_factors:
-        analysisData.key_factors.length > 0
-          ? analysisData.key_factors
-          : [`Deal ${outcome} due to insufficient data for analysis`],
-      lessons_learned:
-        analysisData.lessons_learned.length > 0
-          ? analysisData.lessons_learned
-          : ["More data needed for comprehensive analysis"],
-      recommendations:
-        analysisData.recommendations.length > 0
-          ? analysisData.recommendations
-          : ["Improve data collection for future analysis"],
-      confidence_score: Math.max(
-        1,
-        Math.min(100, analysisData.confidence_score || 50)
-      ),
-      generated_at: new Date().toISOString(),
-    };
+    // Save to database and return the saved analysis
+    try {
+      const savedAnalysis = await WinLossAnalysisService.createAnalysis({
+        deal_id: deal.id,
+        outcome: outcome,
+        explanation: analysisData.explanation,
+        key_factors:
+          analysisData.key_factors.length > 0
+            ? analysisData.key_factors
+            : [`Deal ${outcome} due to insufficient data for analysis`],
+        lessons_learned:
+          analysisData.lessons_learned.length > 0
+            ? analysisData.lessons_learned
+            : ["More data needed for comprehensive analysis"],
+        recommendations:
+          analysisData.recommendations.length > 0
+            ? analysisData.recommendations
+            : ["Improve data collection for future analysis"],
+        confidence_score: Math.max(
+          1,
+          Math.min(100, analysisData.confidence_score || 50)
+        ),
+        context_data: {
+          deal: deal,
+          tasks: context?.tasks || [],
+          communications: context?.communications || [],
+          purchaseHistory: context?.purchaseHistory || [],
+          contact: context?.contact || null,
+        },
+        generated_at: new Date().toISOString(),
+      });
 
-    return winLossAnalysis;
+      return savedAnalysis;
+    } catch (dbError) {
+      console.error("Failed to save win-loss analysis to database:", dbError);
+
+      // Return the generated analysis even if database save fails
+      const winLossAnalysis: WinLossExplainerResponse = {
+        id: `winloss_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        deal_id: deal.id,
+        outcome: outcome,
+        explanation: analysisData.explanation,
+        key_factors:
+          analysisData.key_factors.length > 0
+            ? analysisData.key_factors
+            : [`Deal ${outcome} due to insufficient data for analysis`],
+        lessons_learned:
+          analysisData.lessons_learned.length > 0
+            ? analysisData.lessons_learned
+            : ["More data needed for comprehensive analysis"],
+        recommendations:
+          analysisData.recommendations.length > 0
+            ? analysisData.recommendations
+            : ["Improve data collection for future analysis"],
+        confidence_score: Math.max(
+          1,
+          Math.min(100, analysisData.confidence_score || 50)
+        ),
+        context_data: {
+          deal: deal,
+          tasks: context?.tasks || [],
+          communications: context?.communications || [],
+          purchaseHistory: context?.purchaseHistory || [],
+          contact: context?.contact || null,
+        },
+        generated_at: new Date().toISOString(),
+        created_by: "ai_system",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      return winLossAnalysis;
+    }
   } catch (error) {
     console.error("Error generating win-loss analysis:", error);
     throw new Error("Failed to generate win-loss analysis. Please try again.");
+  }
+};
+
+// Add new deal coach function
+export const generateDealCoachSuggestions = async (
+  deal: Deal,
+  context: {
+    tasks?: Task[];
+    communications?: Communication[];
+    purchaseHistory?: PurchaseHistory[];
+  }
+): Promise<string> => {
+  // Build context information for better suggestions
+  let contextInfo = `
+Deal Information:
+- Title: ${deal.title}
+- Value: $${deal.monetary_value.toLocaleString()}
+- Stage: ${deal.stage}
+- Probability: ${deal.probability_percentage}%
+- Expected Close Date: ${
+    deal.expected_close_date
+      ? new Date(deal.expected_close_date).toLocaleDateString()
+      : "Not set"
+  }
+- Created: ${new Date(deal.created_at).toLocaleDateString()}
+- Updated: ${new Date(deal.updated_at).toLocaleDateString()}`;
+
+  if (context?.tasks && context.tasks.length > 0) {
+    contextInfo += `
+
+Tasks (${context.tasks.length} total):`;
+    context.tasks.slice(0, 10).forEach((task) => {
+      contextInfo += `
+- ${task.title}: ${task.status}${
+        task.due_date
+          ? ` (Due: ${new Date(task.due_date).toLocaleDateString()})`
+          : ""
+      }`;
+      if (task.description) {
+        contextInfo += `
+  Description: ${task.description.substring(0, 100)}${
+          task.description.length > 100 ? "..." : ""
+        }`;
+      }
+    });
+  }
+
+  if (context?.communications && context.communications.length > 0) {
+    contextInfo += `
+
+Communications (${context.communications.length} total):`;
+    context.communications.slice(0, 10).forEach((comm) => {
+      contextInfo += `
+- ${comm.type.replace("_", " ")}: ${comm.subject || "No subject"} (${new Date(
+        comm.communication_date
+      ).toLocaleDateString()})`;
+      if (comm.content) {
+        contextInfo += `
+  Content: ${comm.content.substring(0, 150)}${
+          comm.content.length > 150 ? "..." : ""
+        }`;
+      }
+    });
+  }
+
+  if (context?.purchaseHistory && context.purchaseHistory.length > 0) {
+    contextInfo += `
+
+Purchase History (${context.purchaseHistory.length} total):`;
+    context.purchaseHistory.slice(0, 5).forEach((purchase) => {
+      contextInfo += `
+- ${purchase.product_service}: $${purchase.amount.toLocaleString()} (${
+        purchase.status
+      }) - ${new Date(purchase.date).toLocaleDateString()}`;
+    });
+  }
+
+  const prompt = `
+You are an expert sales deal coach. Analyze the following deal and provide specific, actionable next steps to improve the probability of closing the deal successfully.
+
+${contextInfo}
+
+Based on this data, provide 3-5 specific, actionable recommendations that the sales representative should take to move this deal forward. Focus on:
+
+1. Immediate next steps based on the current stage
+2. Addressing any gaps or risks you identify
+3. Leveraging the customer's communication patterns and preferences
+4. Building momentum toward closing
+5. Specific actions with clear timelines
+
+Format your response as a clear, numbered list of actionable recommendations. Each recommendation should be specific, measurable, and include a suggested timeline.
+
+Keep your response concise but comprehensive - aim for 200-400 words total.
+  `;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are an expert sales deal coach. Provide specific, actionable recommendations to help sales representatives close deals more effectively. Focus on practical next steps based on the deal context and customer behavior patterns.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0.7,
+      max_tokens: 600,
+    });
+
+    const response = completion.choices[0]?.message?.content;
+    if (!response) {
+      throw new Error("No response from OpenAI");
+    }
+
+    const suggestions = response.trim();
+
+    // Save to database
+    try {
+      await DealCoachService.createSuggestion({
+        deal_id: deal.id,
+        suggestions: suggestions,
+        deal_context: {
+          deal: deal,
+          tasks: context.tasks || [],
+          communications: context.communications || [],
+          purchaseHistory: context.purchaseHistory || [],
+        },
+        generated_at: new Date().toISOString(),
+      });
+    } catch (dbError) {
+      console.error(
+        "Failed to save deal coach suggestion to database:",
+        dbError
+      );
+      // Continue with the response even if database save fails
+    }
+
+    return suggestions;
+  } catch (error) {
+    console.error("Error generating deal coach suggestions:", error);
+    throw new Error(
+      "Failed to generate deal coach suggestions. Please try again."
+    );
   }
 };
 
@@ -556,4 +818,5 @@ export const aiService = {
   generateContactPersona,
   generateObjectionResponse,
   generateWinLossExplanation,
+  generateDealCoachSuggestions,
 };

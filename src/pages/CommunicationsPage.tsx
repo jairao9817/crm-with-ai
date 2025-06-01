@@ -245,34 +245,6 @@ const CommunicationsPage: React.FC = () => {
 
   return (
     <>
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Communications
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Track and manage customer communications
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            color="warning"
-            variant="bordered"
-            startContent={<ExclamationTriangleIcon className="w-4 h-4" />}
-            onPress={onObjectionHandlerOpen}
-          >
-            Handle Objection
-          </Button>
-          <Button
-            color="primary"
-            startContent={<PlusIcon className="w-4 h-4" />}
-            onPress={onOpen}
-          >
-            Log Communication
-          </Button>
-        </div>
-      </div>
-
       <PageContainer
         title="Communications"
         subtitle="Track and manage customer communications"
@@ -368,6 +340,19 @@ const CommunicationsPage: React.FC = () => {
           }
         />
       </PageContainer>
+
+      {/* Handle Objection Button - Positioned as a floating action */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <Button
+          color="warning"
+          variant="bordered"
+          startContent={<ExclamationTriangleIcon className="w-4 h-4" />}
+          onPress={onObjectionHandlerOpen}
+          className="shadow-lg"
+        >
+          Handle Objection
+        </Button>
+      </div>
     </>
   );
 };
