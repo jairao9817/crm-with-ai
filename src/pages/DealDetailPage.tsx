@@ -29,12 +29,14 @@ import {
   UserIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
+  ChartBarIcon,
 } from "@heroicons/react/24/outline";
 import { useDeal } from "../hooks/useDeals";
 import { useDealRelatedData } from "../hooks/useDealRelatedData";
 import { DealForm } from "../components/DealForm";
 import { DealCloseModal } from "../components/DealCloseModal";
 import { ObjectionHandler } from "../components/ObjectionHandler";
+import { WinLossExplainer } from "../components/WinLossExplainer";
 import type { DealStage } from "../types/index";
 import { DealService } from "../services/dealService";
 
@@ -93,6 +95,12 @@ const DealDetailPage: React.FC = () => {
     isOpen: isObjectionHandlerOpen,
     onOpen: onObjectionHandlerOpen,
     onClose: onObjectionHandlerClose,
+  } = useDisclosure();
+
+  const {
+    isOpen: isWinLossExplainerOpen,
+    onOpen: onWinLossExplainerOpen,
+    onClose: onWinLossExplainerClose,
   } = useDisclosure();
 
   const [isAICoachOpen, setAICoachOpen] = useState(false);
@@ -206,6 +214,9 @@ const DealDetailPage: React.FC = () => {
     }
   };
 
+  const isClosedDeal =
+    deal?.stage === "closed-won" || deal?.stage === "closed-lost";
+
   if (dealLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -273,6 +284,17 @@ const DealDetailPage: React.FC = () => {
           </div>
         </div>
         <div className="flex gap-2">
+          {/* Win-Loss Explainer Button - Only show for closed deals */}
+          {isClosedDeal && (
+            <Button
+              color="secondary"
+              variant="bordered"
+              startContent={<ChartBarIcon className="w-4 h-4" />}
+              onPress={onWinLossExplainerOpen}
+            >
+              Why Did We {deal.stage === "closed-won" ? "Win" : "Lose"}?
+            </Button>
+          )}
           {/* AI Objection Handler Button */}
           <Button
             color="warning"
@@ -754,6 +776,21 @@ const DealDetailPage: React.FC = () => {
           onClose={onCloseModalClose}
           deal={deal}
           onSuccess={handleCloseSuccess}
+        />
+      )}
+
+      {/* Win-Loss Explainer Modal */}
+      {deal && isClosedDeal && (
+        <WinLossExplainer
+          isOpen={isWinLossExplainerOpen}
+          onClose={onWinLossExplainerClose}
+          deal={deal}
+          context={{
+            tasks,
+            communications,
+            purchaseHistory,
+            contact: deal.contact,
+          }}
         />
       )}
 

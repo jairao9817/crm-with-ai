@@ -4,6 +4,8 @@ import type {
   ContactPersona,
   ObjectionHandlerInput,
   ObjectionHandlerResponse,
+  WinLossExplainerInput,
+  WinLossExplainerResponse,
 } from "../types/index";
 
 // Initialize OpenAI client
@@ -341,7 +343,217 @@ Choose the most appropriate tone based on the objection type and context.
   }
 };
 
+export const generateWinLossExplanation = async (
+  input: WinLossExplainerInput
+): Promise<WinLossExplainerResponse> => {
+  const { deal, context } = input;
+
+  // Determine if the deal was won or lost
+  const outcome = deal.stage === "closed-won" ? "won" : "lost";
+
+  // Build context information for analysis
+  let contextInfo = `
+Deal Information:
+- Title: ${deal.title}
+- Value: $${deal.monetary_value.toLocaleString()}
+- Stage: ${deal.stage}
+- Probability: ${deal.probability_percentage}%
+- Expected Close Date: ${
+    deal.expected_close_date
+      ? new Date(deal.expected_close_date).toLocaleDateString()
+      : "Not set"
+  }
+- Created: ${new Date(deal.created_at).toLocaleDateString()}
+- Updated: ${new Date(deal.updated_at).toLocaleDateString()}`;
+
+  if (context?.contact) {
+    contextInfo += `
+
+Customer Information:
+- Name: ${context.contact.name}
+- Company: ${context.contact.company || "Not specified"}
+- Job Title: ${context.contact.job_title || "Not specified"}
+- Email: ${context.contact.email}
+- Phone: ${context.contact.phone || "Not provided"}`;
+  }
+
+  if (context?.tasks && context.tasks.length > 0) {
+    contextInfo += `
+
+Tasks (${context.tasks.length} total):`;
+    context.tasks.slice(0, 10).forEach((task) => {
+      contextInfo += `
+- ${task.title}: ${task.status}${
+        task.due_date
+          ? ` (Due: ${new Date(task.due_date).toLocaleDateString()})`
+          : ""
+      }`;
+      if (task.description) {
+        contextInfo += `
+  Description: ${task.description.substring(0, 100)}${
+          task.description.length > 100 ? "..." : ""
+        }`;
+      }
+    });
+  }
+
+  if (context?.communications && context.communications.length > 0) {
+    contextInfo += `
+
+Communications (${context.communications.length} total):`;
+    context.communications.slice(0, 10).forEach((comm) => {
+      contextInfo += `
+- ${comm.type.replace("_", " ")}: ${comm.subject || "No subject"} (${new Date(
+        comm.communication_date
+      ).toLocaleDateString()})`;
+      if (comm.content) {
+        contextInfo += `
+  Content: ${comm.content.substring(0, 150)}${
+          comm.content.length > 150 ? "..." : ""
+        }`;
+      }
+    });
+  }
+
+  if (context?.purchaseHistory && context.purchaseHistory.length > 0) {
+    contextInfo += `
+
+Purchase History (${context.purchaseHistory.length} total):`;
+    context.purchaseHistory.slice(0, 5).forEach((purchase) => {
+      contextInfo += `
+- ${purchase.product_service}: $${purchase.amount.toLocaleString()} (${
+        purchase.status
+      }) - ${new Date(purchase.date).toLocaleDateString()}`;
+    });
+  }
+
+  const prompt = `
+You are an expert sales analyst specializing in win-loss analysis. Analyze the following ${outcome} deal and provide insights into why it ${
+    outcome === "won" ? "was successful" : "was lost"
+  }.
+
+${contextInfo}
+
+Based on this data, provide a comprehensive analysis in the following JSON format. Do not include markdown formatting or code blocks - just the raw JSON:
+
+{
+  "explanation": "A detailed 2-3 paragraph explanation of why this deal was ${outcome}, analyzing the key factors and patterns",
+  "key_factors": ["factor1", "factor2", "factor3", "factor4"],
+  "lessons_learned": ["lesson1", "lesson2", "lesson3"],
+  "recommendations": ["recommendation1", "recommendation2", "recommendation3"],
+  "confidence_score": 85
+}
+
+Guidelines for your analysis:
+1. Focus on actionable insights based on the actual data provided
+2. Consider timing, communication patterns, task completion, customer engagement
+3. Identify specific factors that contributed to the ${outcome}
+4. Provide lessons that can be applied to future deals
+5. Give recommendations for improving future deal outcomes
+6. Assign a confidence score (1-100) based on the amount and quality of data available
+7. Be specific and avoid generic statements
+8. Consider the customer's behavior patterns and engagement level
+
+Key factors should be 3-5 specific elements that directly influenced the outcome.
+Lessons learned should be 2-4 insights that can be applied to future deals.
+Recommendations should be 2-4 actionable steps for improving future performance.
+  `;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are an expert sales analyst specializing in win-loss analysis. Analyze deal outcomes to provide actionable insights for sales teams. Always respond with valid JSON only - no markdown, no code blocks, just the JSON object.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0.7,
+      max_tokens: 1200,
+    });
+
+    const response = completion.choices[0]?.message?.content;
+    if (!response) {
+      throw new Error("No response from OpenAI");
+    }
+
+    // Clean up the response - remove markdown code blocks if present
+    let cleanedResponse = response.trim();
+
+    // Remove ```json and ``` if present
+    if (cleanedResponse.startsWith("```json")) {
+      cleanedResponse = cleanedResponse
+        .replace(/^```json\s*/, "")
+        .replace(/\s*```$/, "");
+    } else if (cleanedResponse.startsWith("```")) {
+      cleanedResponse = cleanedResponse
+        .replace(/^```\s*/, "")
+        .replace(/\s*```$/, "");
+    }
+
+    // Parse the JSON response
+    let analysisData;
+    try {
+      analysisData = JSON.parse(cleanedResponse);
+    } catch (parseError) {
+      console.error("Failed to parse JSON response:", cleanedResponse);
+      throw new Error("Invalid response format from AI. Please try again.");
+    }
+
+    // Validate the response structure
+    if (!analysisData || typeof analysisData !== "object") {
+      throw new Error("Invalid response structure from AI. Please try again.");
+    }
+
+    if (
+      !analysisData.explanation ||
+      !Array.isArray(analysisData.key_factors) ||
+      !Array.isArray(analysisData.lessons_learned) ||
+      !Array.isArray(analysisData.recommendations) ||
+      typeof analysisData.confidence_score !== "number"
+    ) {
+      throw new Error("Incomplete response from AI. Please try again.");
+    }
+
+    // Create the win-loss analysis object
+    const winLossAnalysis: WinLossExplainerResponse = {
+      id: `winloss_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      deal_id: deal.id,
+      outcome: outcome,
+      explanation: analysisData.explanation,
+      key_factors:
+        analysisData.key_factors.length > 0
+          ? analysisData.key_factors
+          : [`Deal ${outcome} due to insufficient data for analysis`],
+      lessons_learned:
+        analysisData.lessons_learned.length > 0
+          ? analysisData.lessons_learned
+          : ["More data needed for comprehensive analysis"],
+      recommendations:
+        analysisData.recommendations.length > 0
+          ? analysisData.recommendations
+          : ["Improve data collection for future analysis"],
+      confidence_score: Math.max(
+        1,
+        Math.min(100, analysisData.confidence_score || 50)
+      ),
+      generated_at: new Date().toISOString(),
+    };
+
+    return winLossAnalysis;
+  } catch (error) {
+    console.error("Error generating win-loss analysis:", error);
+    throw new Error("Failed to generate win-loss analysis. Please try again.");
+  }
+};
+
 export const aiService = {
   generateContactPersona,
   generateObjectionResponse,
+  generateWinLossExplanation,
 };

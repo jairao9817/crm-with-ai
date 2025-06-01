@@ -5,6 +5,7 @@ export { DealForm } from "./DealForm";
 export { default as Sidebar } from "./Sidebar";
 export { default as Layout } from "./Layout";
 export { ObjectionHandler } from "./ObjectionHandler";
+export { WinLossExplainer } from "./WinLossExplainer";
 
 // Common components
 export {

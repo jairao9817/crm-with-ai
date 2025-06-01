@@ -290,3 +290,26 @@ export interface ObjectionHandlerResponse {
   tone: "professional" | "empathetic" | "confident" | "consultative";
   generated_at: string;
 }
+
+// Win-Loss Explainer Types
+export interface WinLossExplainerInput {
+  deal: Deal;
+  context?: {
+    tasks?: Task[];
+    communications?: Communication[];
+    purchaseHistory?: PurchaseHistory[];
+    contact?: Contact;
+  };
+}
+
+export interface WinLossExplainerResponse {
+  id: string;
+  deal_id: string;
+  outcome: "won" | "lost";
+  explanation: string;
+  key_factors: string[];
+  lessons_learned: string[];
+  recommendations: string[];
+  confidence_score: number;
+  generated_at: string;
+}
