@@ -10,6 +10,7 @@ import {
   XMarkIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
 import {
   HomeIcon as HomeIconSolid,
@@ -18,6 +19,7 @@ import {
   CheckCircleIcon as CheckCircleIconSolid,
   ChatBubbleLeftRightIcon as ChatBubbleLeftRightIconSolid,
   ShoppingCartIcon as ShoppingCartIconSolid,
+  SparklesIcon as SparklesIconSolid,
 } from "@heroicons/react/24/solid";
 
 interface NavigationItem {
@@ -63,6 +65,12 @@ const navigation: NavigationItem[] = [
     href: "/purchase-history",
     icon: ShoppingCartIcon,
     iconSolid: ShoppingCartIconSolid,
+  },
+  {
+    name: "AI Assistant",
+    href: "/ai-assistant",
+    icon: SparklesIcon,
+    iconSolid: SparklesIconSolid,
   },
 ];
 

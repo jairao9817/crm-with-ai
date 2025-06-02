@@ -15,6 +15,7 @@ export { default as DealDetailPage } from "./DealDetailPage";
 export { default as TasksPage } from "./TasksPage";
 export { default as CommunicationsPage } from "./CommunicationsPage";
 export { default as PurchaseHistoryPage } from "./PurchaseHistoryPage";
+export { default as AIAssistantPage } from "./AIAssistantPage";
 
 // User Management Pages
 export { default as ProfilePage } from "./ProfilePage";

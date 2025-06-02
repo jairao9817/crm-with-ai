@@ -30,6 +30,7 @@ import CommunicationsPage from "./pages/CommunicationsPage";
 import CommunicationDetailPage from "./pages/CommunicationDetailPage";
 import PurchaseHistoryPage from "./pages/PurchaseHistoryPage";
 import PurchaseHistoryDetailPage from "./pages/PurchaseHistoryDetailPage";
+import AIAssistantPage from "./pages/AIAssistantPage";
 import "./App.css";
 
 const AppRouter: React.FC = () => {
@@ -206,6 +207,16 @@ const AppRouter: React.FC = () => {
           <ProtectedRoute>
             <Layout>
               <SettingsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/ai-assistant"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <AIAssistantPage />
             </Layout>
           </ProtectedRoute>
         }
