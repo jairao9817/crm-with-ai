@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Sidebar from "./Sidebar";
 import { TopNavbar } from "./TopNavbar";
+import { AIChatButton } from "./ai-chat/AIChatButton";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -39,6 +40,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </main>
         </div>
       </div>
+      
+      {/* AI Chat Button */}
+      <AIChatButton />
     </div>
   );
 };

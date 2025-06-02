@@ -8,6 +8,7 @@ import {
 import { HeroUIProvider } from "@heroui/react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { AIChatProvider } from "./context/AIChatContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import LoginPage from "./pages/LoginPage";
@@ -227,15 +228,17 @@ const AppRouter: React.FC = () => {
 
 function App() {
   return (
-    <HeroUIProvider>
-      <ThemeProvider>
-        <Router>
-          <AuthProvider>
-            <AppRouter />
-          </AuthProvider>
-        </Router>
-      </ThemeProvider>
-    </HeroUIProvider>
+    <ThemeProvider>
+      <HeroUIProvider>
+        <AuthProvider>
+          <AIChatProvider>
+            <Router>
+              <AppRouter />
+            </Router>
+          </AIChatProvider>
+        </AuthProvider>
+      </HeroUIProvider>
+    </ThemeProvider>
   );
 }
 
