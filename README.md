@@ -106,6 +106,9 @@ VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 # Optional: System-wide OpenAI API key (users can override in settings)
 VITE_OPENAI_API_KEY=your_openai_api_key
+# Required for AI Assistant with Knowledge Base
+VITE_PINECONE_API_KEY=your_pinecone_api_key
+VITE_PINECONE_INDEX=crm-embeddings
 ```
 
 ### 3. Database Setup
@@ -129,9 +132,22 @@ VITE_OPENAI_API_KEY=your_openai_api_key
 
 -- 5. User settings and preferences
 -- Copy and run: database/user-settings-schema.sql
+
+-- 6. Embedding documents for AI Assistant knowledge base
+-- Copy and run: database/embedding-documents-schema.sql
 ```
 
-### 4. Start Development Server
+### 4. Pinecone Setup
+
+1. Create a [Pinecone](https://www.pinecone.io) account
+2. Create a new index named `crm-embeddings` (or your preferred name)
+3. Use the following configuration:
+   - **Dimensions**: 1536 (for OpenAI text-embedding-3-small)
+   - **Metric**: cosine
+   - **Pod Type**: s1.x1 (starter)
+4. Copy your API key to the `VITE_PINECONE_API_KEY` environment variable
+
+### 5. Start Development Server
 
 ```bash
 npm run dev
@@ -139,9 +155,11 @@ npm run dev
 
 The application will be available at `http://localhost:5173`
 
-## 🔑 OpenAI API Key Configuration
+## 🔑 API Key Configuration
 
-### Option 1: User-Configured API Keys (Recommended)
+### OpenAI API Key
+
+#### Option 1: User-Configured API Keys (Recommended)
 
 Users can configure their own OpenAI API keys through the application:
 
@@ -158,11 +176,15 @@ Users can configure their own OpenAI API keys through the application:
 - Better security and privacy
 - Users can update keys independently
 
-### Option 2: System-Wide API Key
+#### Option 2: System-Wide API Key
 
 Set `VITE_OPENAI_API_KEY` in your environment variables for a fallback system-wide key.
 
 **Note:** User-configured keys take priority over the system-wide key.
+
+### Pinecone API Key (Required)
+
+Pinecone is used for storing and retrieving document embeddings for the AI Assistant knowledge base. Set your Pinecone API key in the `VITE_PINECONE_API_KEY` environment variable.
 
 ## 🏗️ Project Structure
 
@@ -183,10 +205,13 @@ src/
 │   ├── PurchaseHistoryPage.tsx# Purchase tracking
 │   ├── ActivityPage.tsx       # Activity feed
 │   ├── SettingsPage.tsx       # User settings with API key config
+│   ├── AIAssistantPage.tsx    # AI Assistant with knowledge base
 │   └── ProfilePage.tsx        # User profile management
 ├── services/           # API and business logic
 │   ├── aiService.ts           # Central AI service with dynamic client
 │   ├── settingsService.ts     # User settings management
+│   ├── chatbotService.ts      # AI Assistant with embeddings and vector search
+│   ├── getAllDataForEmbadding.ts # Dummy data for testing embeddings
 │   ├── contactPersonaService.ts
 │   ├── dealCoachService.ts
 │   ├── objectionResponseService.ts
@@ -205,7 +230,11 @@ database/               # Database schemas
 ├── phase3-schema.sql          # Extended features
 ├── phase4-communication-notes.sql
 ├── ai-features-schema.sql     # AI features tables
-└── user-settings-schema.sql   # User settings
+├── user-settings-schema.sql   # User settings
+└── embedding-documents-schema.sql # Knowledge base documents
+
+docs/                   # Documentation
+└── pinecone-setup.md          # Detailed Pinecone configuration guide
 ```
 
 ## 🔧 Available Scripts
@@ -285,6 +314,46 @@ database/               # Database schemas
 - Available for closed deals (won or lost)
 - Click **"Why Did We Win/Lose?"** button
 - Get detailed analysis with key factors and recommendations
+
+#### AI Assistant with Knowledge Base
+
+The AI Assistant provides intelligent support powered by your company's knowledge base:
+
+**Setting Up Knowledge Base:**
+
+1. Navigate to the **AI Assistant** page
+2. Click the **"Knowledge"** button in the header
+3. Add your company documents using the **"Add Document"** button or load sample data
+4. Documents are automatically converted to embeddings and stored in Pinecone
+
+**Adding Knowledge:**
+
+- Click **"Add Document"** to manually add company policies, procedures, FAQs, etc.
+- Use **"Load Sample Data"** to get started with example business documents
+- Documents support different types: Knowledge, FAQ, Policy, Procedure, Other
+- All content is automatically processed with LangChain and OpenAI embeddings
+
+**Using the AI Assistant:**
+
+- Type questions in natural language about your business, CRM, or company policies
+- The AI searches your knowledge base for relevant information
+- Responses are contextually aware and based on your uploaded documents
+- Use quick action buttons for common queries about CRM best practices, objection handling, etc.
+
+**Features:**
+
+- **Semantic Search**: Find relevant information even with different wording
+- **Context-Aware Responses**: AI provides answers based on your specific knowledge base
+- **Document Management**: View, organize, and delete knowledge base documents
+- **Chat History**: Access previous conversations and insights
+- **Smart Suggestions**: Quick action buttons for common business questions
+
+**Best Practices:**
+
+- Add comprehensive company documentation for better AI responses
+- Include customer service scripts, product information, and business processes
+- Regularly update documents to keep the knowledge base current
+- Use descriptive titles and organize content by type for easy management
 
 ## 📊 Dashboard Analytics
 

@@ -4,12 +4,43 @@ import {
   ClockIcon,
   TrashIcon,
   PaperAirplaneIcon,
+  DocumentPlusIcon,
+  BookOpenIcon,
+  XMarkIcon,
+  CheckIcon,
 } from "@heroicons/react/24/outline";
 import { Button } from "../components/ui/Button";
+import {
+  generateChatbotResponse,
+  generateAndStoreEmbeddings,
+  getUserDocuments,
+  deleteDocument,
+} from "../services/chatbotService";
+import { getAllDummyData } from "../services/getAllDataForEmbadding";
+
+interface KnowledgeDocument {
+  id: string;
+  title: string;
+  content: string;
+  type: string;
+  source: string;
+  created_at: string;
+}
 
 const AIAssistantPage: React.FC = () => {
   const [input, setInput] = useState("");
   const [showHistory, setShowHistory] = useState(false);
+  const [showKnowledge, setShowKnowledge] = useState(false);
+  const [knowledgeDocs, setKnowledgeDocs] = useState<KnowledgeDocument[]>([]);
+  const [isLoadingDocs, setIsLoadingDocs] = useState(false);
+
+  // Add document form state
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newDocTitle, setNewDocTitle] = useState("");
+  const [newDocContent, setNewDocContent] = useState("");
+  const [newDocType, setNewDocType] = useState("knowledge");
+  const [isAddingDoc, setIsAddingDoc] = useState(false);
+
   const { messages, addMessage, clearHistory, isLoading, setIsLoading } =
     useAIChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -17,6 +48,25 @@ const AIAssistantPage: React.FC = () => {
 
   // Filter out the initial welcome message for history
   const chatHistory = messages.filter((msg) => msg.id !== "1");
+
+  // Load knowledge documents when knowledge tab is opened
+  useEffect(() => {
+    if (showKnowledge) {
+      loadKnowledgeDocs();
+    }
+  }, [showKnowledge]);
+
+  const loadKnowledgeDocs = async () => {
+    setIsLoadingDocs(true);
+    try {
+      const docs = await getUserDocuments();
+      setKnowledgeDocs(docs);
+    } catch (error) {
+      console.error("Error loading documents:", error);
+    } finally {
+      setIsLoadingDocs(false);
+    }
+  };
 
   // Group messages by date
   const groupMessagesByDate = (msgs: Message[]) => {
@@ -45,10 +95,10 @@ const AIAssistantPage: React.FC = () => {
 
   useEffect(() => {
     // Focus input when page loads
-    if (!showHistory && inputRef.current) {
+    if (!showHistory && !showKnowledge && inputRef.current) {
       inputRef.current.focus();
     }
-  }, [showHistory]);
+  }, [showHistory, showKnowledge]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -60,34 +110,112 @@ const AIAssistantPage: React.FC = () => {
       isUser: true,
     });
 
+    const userInput = input;
     setInput("");
     setIsLoading(true);
 
     try {
-      // TODO: Replace with actual API call to your backend
-      // const response = await fetch('/api/ai/chat', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ message: input }),
-      // });
-      // const data = await response.json();
-
-      // Simulate API response
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
+      const response = await generateChatbotResponse(userInput);
       // Add AI response to chat
       addMessage({
-        content: `I received your question: "${input}". As your CRM AI Assistant, I can help you with customer data analysis, lead management, sales insights, and task automation. How can I assist you with your CRM activities today?`,
+        content: response,
         isUser: false,
       });
     } catch (error) {
       console.error("Error sending message:", error);
       addMessage({
-        content: "Sorry, I encountered an error. Please try again later.",
+        content:
+          "Sorry, I encountered an error. Please try again later. Make sure your OpenAI API key is configured in Settings.",
         isUser: false,
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAddDocument = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newDocTitle.trim() || !newDocContent.trim()) return;
+
+    setIsAddingDoc(true);
+    try {
+      await generateAndStoreEmbeddings(
+        newDocTitle,
+        newDocContent,
+        newDocType,
+        "manual"
+      );
+
+      // Reset form
+      setNewDocTitle("");
+      setNewDocContent("");
+      setNewDocType("knowledge");
+      setShowAddForm(false);
+
+      // Reload documents
+      await loadKnowledgeDocs();
+
+      addMessage({
+        content: `Successfully added "${newDocTitle}" to the knowledge base!`,
+        isUser: false,
+      });
+    } catch (error) {
+      console.error("Error adding document:", error);
+      addMessage({
+        content:
+          "Sorry, I couldn't add the document to the knowledge base. Please check your API keys and try again.",
+        isUser: false,
+      });
+    } finally {
+      setIsAddingDoc(false);
+    }
+  };
+
+  const handleDeleteDocument = async (docId: string, title: string) => {
+    if (!window.confirm(`Are you sure you want to delete "${title}"?`)) return;
+
+    try {
+      const success = await deleteDocument(docId);
+      if (success) {
+        await loadKnowledgeDocs();
+        addMessage({
+          content: `Successfully deleted "${title}" from the knowledge base.`,
+          isUser: false,
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting document:", error);
+    }
+  };
+
+  const handleLoadDummyData = async () => {
+    const dummyData = getAllDummyData();
+    setIsLoadingDocs(true);
+
+    try {
+      for (const item of dummyData) {
+        await generateAndStoreEmbeddings(
+          item.title,
+          item.content,
+          item.type,
+          item.source
+        );
+      }
+
+      await loadKnowledgeDocs();
+      addMessage({
+        content: `Successfully loaded ${dummyData.length} dummy documents into the knowledge base!`,
+        isUser: false,
+      });
+    } catch (error) {
+      console.error("Error loading dummy data:", error);
+      addMessage({
+        content:
+          "Sorry, I couldn't load the dummy data. Please check your API keys and try again.",
+        isUser: false,
+      });
+    } finally {
+      setIsLoadingDocs(false);
     }
   };
 
@@ -131,11 +259,17 @@ const AIAssistantPage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-text-primary">
-              {showHistory ? "Chat History" : "AI Assistant"}
+              {showHistory
+                ? "Chat History"
+                : showKnowledge
+                ? "Knowledge Base"
+                : "AI Assistant"}
             </h1>
             <p className="text-text-secondary">
               {showHistory
                 ? "View your conversation history"
+                : showKnowledge
+                ? "Manage your knowledge base for better AI responses"
                 : "Your intelligent CRM companion"}
             </p>
           </div>
@@ -143,11 +277,25 @@ const AIAssistantPage: React.FC = () => {
         <div className="flex items-center space-x-2">
           <Button
             variant="ghost"
-            onClick={() => setShowHistory(!showHistory)}
+            onClick={() => {
+              setShowKnowledge(false);
+              setShowHistory(!showHistory);
+            }}
             className="flex items-center space-x-2"
           >
             <ClockIcon className="h-5 w-5" />
             <span>{showHistory ? "Back to Chat" : "History"}</span>
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setShowHistory(false);
+              setShowKnowledge(!showKnowledge);
+            }}
+            className="flex items-center space-x-2"
+          >
+            <BookOpenIcon className="h-5 w-5" />
+            <span>{showKnowledge ? "Back to Chat" : "Knowledge"}</span>
           </Button>
           {showHistory && chatHistory.length > 0 && (
             <Button
@@ -172,7 +320,194 @@ const AIAssistantPage: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {showHistory ? (
+        {showKnowledge ? (
+          <div className="w-full h-full overflow-y-auto bg-background">
+            <div className="max-w-4xl mx-auto p-6">
+              {/* Knowledge Base Header */}
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-text-primary mb-2">
+                    Knowledge Base Management
+                  </h2>
+                  <p className="text-text-secondary">
+                    Add documents to improve AI responses. The AI will use this
+                    knowledge to answer questions more accurately.
+                  </p>
+                </div>
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={handleLoadDummyData}
+                    disabled={isLoadingDocs}
+                    className="flex items-center space-x-2"
+                  >
+                    <DocumentPlusIcon className="h-5 w-5" />
+                    <span>Load Sample Data</span>
+                  </Button>
+                  <Button
+                    onClick={() => setShowAddForm(true)}
+                    className="flex items-center space-x-2"
+                  >
+                    <DocumentPlusIcon className="h-5 w-5" />
+                    <span>Add Document</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Add Document Form */}
+              {showAddForm && (
+                <div className="bg-surface rounded-lg border border-border p-6 mb-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium text-text-primary">
+                      Add New Document
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setShowAddForm(false)}
+                      className="p-1"
+                    >
+                      <XMarkIcon className="h-5 w-5" />
+                    </Button>
+                  </div>
+                  <form onSubmit={handleAddDocument} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-2">
+                        Title
+                      </label>
+                      <input
+                        type="text"
+                        value={newDocTitle}
+                        onChange={(e) => setNewDocTitle(e.target.value)}
+                        placeholder="Enter document title..."
+                        className="w-full px-3 py-2 border border-border rounded-md bg-background text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-2">
+                        Type
+                      </label>
+                      <select
+                        value={newDocType}
+                        onChange={(e) => setNewDocType(e.target.value)}
+                        className="w-full px-3 py-2 border border-border rounded-md bg-background text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      >
+                        <option value="knowledge">Knowledge</option>
+                        <option value="faq">FAQ</option>
+                        <option value="policy">Policy</option>
+                        <option value="procedure">Procedure</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-2">
+                        Content
+                      </label>
+                      <textarea
+                        value={newDocContent}
+                        onChange={(e) => setNewDocContent(e.target.value)}
+                        placeholder="Enter document content..."
+                        rows={8}
+                        className="w-full px-3 py-2 border border-border rounded-md bg-background text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        required
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => setShowAddForm(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={
+                          isAddingDoc ||
+                          !newDocTitle.trim() ||
+                          !newDocContent.trim()
+                        }
+                        className="flex items-center space-x-2"
+                      >
+                        {isAddingDoc ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        ) : (
+                          <CheckIcon className="h-4 w-4" />
+                        )}
+                        <span>
+                          {isAddingDoc ? "Adding..." : "Add Document"}
+                        </span>
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* Documents List */}
+              {isLoadingDocs ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                </div>
+              ) : knowledgeDocs.length > 0 ? (
+                <div className="space-y-4">
+                  {knowledgeDocs.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="bg-surface rounded-lg border border-border p-4"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-text-primary">
+                            {doc.title}
+                          </h4>
+                          <div className="flex items-center space-x-2 text-sm text-text-secondary mt-1">
+                            <span className="px-2 py-1 bg-background-secondary rounded-md capitalize">
+                              {doc.type}
+                            </span>
+                            <span>•</span>
+                            <span>
+                              {new Date(doc.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          onClick={() =>
+                            handleDeleteDocument(doc.id, doc.title)
+                          }
+                          className="text-red-600 hover:text-red-700 p-1"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <p className="text-text-secondary text-sm line-clamp-3">
+                        {doc.content.substring(0, 200)}...
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <BookOpenIcon className="h-16 w-16 text-text-secondary mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-text-primary mb-2">
+                    No documents yet
+                  </h3>
+                  <p className="text-text-secondary mb-4">
+                    Add documents to improve AI responses with your company's
+                    knowledge.
+                  </p>
+                  <div className="flex justify-center space-x-2">
+                    <Button onClick={handleLoadDummyData} variant="ghost">
+                      Load Sample Data
+                    </Button>
+                    <Button onClick={() => setShowAddForm(true)}>
+                      Add Your First Document
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : showHistory ? (
           <div className="w-full h-full overflow-y-auto bg-background">
             {Object.entries(groupedHistory).length > 0 ? (
               <div className="max-w-4xl mx-auto p-6">
@@ -341,31 +676,33 @@ const AIAssistantPage: React.FC = () => {
                 <div className="mt-4 flex flex-wrap gap-2">
                   <button
                     type="button"
-                    onClick={() => setInput("Show me my recent deals")}
+                    onClick={() => setInput("What are the CRM best practices?")}
                     className="px-3 py-1 text-sm bg-background-secondary hover:bg-background-tertiary text-text-secondary rounded-md border border-border transition-colors"
                   >
-                    Show recent deals
+                    CRM best practices
                   </button>
                   <button
                     type="button"
-                    onClick={() => setInput("What are my pending tasks?")}
+                    onClick={() =>
+                      setInput("How should I handle price objections?")
+                    }
                     className="px-3 py-1 text-sm bg-background-secondary hover:bg-background-tertiary text-text-secondary rounded-md border border-border transition-colors"
                   >
-                    Pending tasks
+                    Handle objections
                   </button>
                   <button
                     type="button"
-                    onClick={() => setInput("Analyze my sales performance")}
+                    onClick={() => setInput("What's our onboarding process?")}
                     className="px-3 py-1 text-sm bg-background-secondary hover:bg-background-tertiary text-text-secondary rounded-md border border-border transition-colors"
                   >
-                    Sales analysis
+                    Onboarding process
                   </button>
                   <button
                     type="button"
-                    onClick={() => setInput("Help me find hot leads")}
+                    onClick={() => setInput("Tell me about our pricing tiers")}
                     className="px-3 py-1 text-sm bg-background-secondary hover:bg-background-tertiary text-text-secondary rounded-md border border-border transition-colors"
                   >
-                    Find hot leads
+                    Pricing information
                   </button>
                 </div>
               </div>
