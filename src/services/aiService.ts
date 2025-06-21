@@ -87,7 +87,7 @@ ${deals
       : "Not set"
   }`
   )
-  .join("")}
+  .join("\n")}
 
 COMMUNICATION HISTORY (${communications.length} interactions):
 ${communications
@@ -98,7 +98,7 @@ ${communications
   Date: ${new Date(comm.communication_date).toLocaleDateString()}
   Content: ${comm.content?.substring(0, 100) || "No content"}...`
   )
-  .join("")}
+  .join("\n")}
 
 PURCHASE HISTORY (${purchaseHistory.length} purchases):
 ${purchaseHistory
@@ -107,7 +107,7 @@ ${purchaseHistory
 - ${purchase.product_service}: $${purchase.amount} (${purchase.status})
   Date: ${new Date(purchase.date).toLocaleDateString()}`
   )
-  .join("")}
+  .join("\n")}
 
 Based on this data, generate a JSON response with the following structure:
 {
