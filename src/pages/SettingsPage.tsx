@@ -199,7 +199,8 @@ const SettingsPage: React.FC = () => {
 
     try {
       // Test the API key by making a simple request
-      const testClient = new (await import("openai")).default({
+      const { default: OpenAI } = await import("openai");
+      const testClient = new OpenAI({
         apiKey: apiKey.trim(),
         dangerouslyAllowBrowser: true,
       });
