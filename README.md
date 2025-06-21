@@ -422,7 +422,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - [Supabase](https://supabase.com/) for the backend infrastructure and real-time capabilities
 - [OpenAI](https://openai.com/) for advanced AI capabilities
-- [HeroUI](https://heroui.org/) for the modern component library
+- [HeroUI](https://heroui.dev/) for the modern component library
 - [Tailwind CSS](https://tailwindcss.com/) for utility-first styling
 - [React](https://react.dev/) for the powerful frontend framework
 - [Vite](https://vitejs.dev/) for the fast development experience
