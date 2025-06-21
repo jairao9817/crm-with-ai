@@ -88,7 +88,7 @@ export const useDashboard = (): UseDashboardReturn => {
       }
       setLoading((prev) => ({ ...prev, revenue: false }));
 
-      // Check if any critical data failed to load
+      // Check if all dashboard requests failed
       const failedRequests = [
         metricsData,
         activityData,
